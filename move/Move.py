@@ -56,6 +56,9 @@ class NormalMovement:
         if (not (1 <= self.start <= 24)) or (not (1 <= self.end <= 24)):
             raise IllegalMoveException("Invalid location")
 
+    def getEnd(self):
+        return self.end
+
     def getDieUsed(self):
         return self.die
 
@@ -104,6 +107,9 @@ class BarMovement:
         if not (1 <= self.end <= 24):
             raise IllegalMoveException("Invalid location")
 
+    def getEnd(self):
+        return self.end
+
     def getDieUsed(self):
         return self.die
 
@@ -143,6 +149,9 @@ class TakeOffMovement:
         self.start = start
         if not (1 <= self.start <= 24):
             raise IllegalMoveException("Invalid location")
+
+    def getEnd(self):
+        return False
 
     def getDieUsed(self):
         return self.die
@@ -216,7 +225,6 @@ class Move:
                 raise IllegalMoveException("Move cannot be made given the dice")
 
         #  Test to make sure a player used all of their dice that they could
-        #  TODO: sometimes a player can only use one of their dice as the second movement (always same piece)
         #  TODO: sometimes a player can move either die but not both (rules say must use larger)
         #  TODO: sometimes a player can move some doubles but not all
         if len(distances) > 0:
@@ -237,7 +245,7 @@ class Move:
 
         #  Can they move from the bar
         try:
-            move = BarMovement(self.color, die, getRelativePointLocation(self.color, die))
+            move = BarMovement(self.color, die, getRelativePointLocation(getOtherColor(self.color), die))
             move.apply(scratch)
             return True
         except IllegalMoveException:

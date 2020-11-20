@@ -8,8 +8,6 @@ def generate_moves(board, color, dice):
     locations = board.getCheckerSet(color)
     moves = set()
     if not dice.isDoubles():
-        # TODO: legal move once
-        #
         #  MOVE TWO FROM SEPARATE POINTS
         combos = combinations(locations, 2)
         for combo in combos:
@@ -28,7 +26,8 @@ def generate_moves(board, color, dice):
                     moves.add(Move(board, color, dice, [first_movement, second_movement]))
 
         #  ADDITIONAL MOVE TWICE OPTIONS (can only work if no pieces on bar)
-        if (board.numBar(color)) == 0:
+        num_bar = board.numBar(color)
+        if num_bar == 0:
             for point in locations:
                 # -------------------------------------------------------------------------------------------
                 # ONE MOVES TWICE
@@ -56,6 +55,28 @@ def generate_moves(board, color, dice):
                         if second:
                             moves.add(Move(board, color, dice, [first, second]))
 
+        # can move once or zero times
+        if len(moves) == 0:
+            print("no moves.. yet")
+            other_color = getOtherColor(color)
+            if num_bar > 1:
+                come_in_1 = not board.numAt(other_color, getRelativePointLocation(other_color, dice.getDie1())) > 1
+                come_in_2 = not board.numAt(other_color, getRelativePointLocation(other_color, dice.getDie2())) > 1
+                if not (come_in_1 or come_in_2):
+                    moves.add(Move(board, color, dice, []))
+                    return moves
+                elif not come_in_1:
+                    first_movement = buildMovement(board, color, dice.getDie2(), -1)  # location doesn't matter for coming in
+                    moves.add(Move(board, color, dice, [first_movement]))
+                    return moves
+                elif not come_in_2:
+                    first_movement = buildMovement(board, color, dice.getDie1(), -1)  # location doesn't matter for coming in
+                    moves.add(Move(board, color, dice, [first_movement]))
+                    return moves
+
+            else:
+                # TODO
+                pass
     else:
         # TODO: do this
         pass
@@ -64,7 +85,7 @@ def generate_moves(board, color, dice):
     
     for move in moves:
         if move.getBoardAfter() is None:
-            print("BAD MOVE " + str(move))
+            raise Exception("BAD MOVE")
 
     return moves
 
@@ -99,10 +120,57 @@ def buildMovement(board, color, die, location, return_board=False):
             except IllegalMoveException:
                 return False  # the die cannot be applied to this location given the board
 
-#
-# def sameResult(board: Board, move1: Move, move2: Move):
-#     board1 = getScratch(board)
-#     move1.apply(board1, check="minimal")
-#     board2 = getScratch(board)
-#     move2.apply(board2, check="minimal")
-#     return board1 == board2
+
+# This may be obsolete, but should look at bottom section for logic
+def canMove(board, color, dice, dienumber):
+    scratch = getScratch(board)
+    if dienumber == 1:
+        die = dice.getDie1()
+        other_die = dice.getDie2()
+    elif dienumber == 2:
+        die = dice.getDie2()
+        other_die = dice.getDie1()
+    else:
+        raise Exception("Invalid input to canMove function for dienumber")
+
+    #  Can they move from the bar
+    try:
+        move = BarMovement(color, die, getRelativePointLocation(getOtherColor(color), die))
+        move.apply(scratch)
+        return True
+    except IllegalMoveException:
+        pass
+
+    locations = scratch.getCheckerSet(color)
+    for location in locations:
+        #  Can they move normally
+        try:
+            move = NormalMovement(color, die, location, location+die*getDirection(color))
+            move.apply(scratch)
+            return True
+        except IllegalMoveException:
+            pass
+
+        #  Can they take off a piece
+        try:
+            move = TakeOffMovement(color, die, location)
+            move.apply(scratch)
+            return True
+        except IllegalMoveException:
+            pass
+
+    #  Maybe they can move die after moving the other die first
+    if not dice.isDoubles():
+        for location in locations:
+            try:
+                first = buildMovement(board, color, other_die, location, return_board=True)
+                if first:
+                    first_movement, board_after = first
+                    second = buildMovement(board_after, color, die, first_movement.getEnd())
+                    if second:
+                        print("They can use die " + str(die) + " by doing " + str(first_movement) + " first.")
+                        return True
+            except IllegalMoveException:
+                pass
+
+    return False

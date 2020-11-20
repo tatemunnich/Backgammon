@@ -1,8 +1,8 @@
 from board.Board import Board, BLACK, WHITE, NONE
 from board.Dice import Dice
-from move.IllegalMoveException import IllegalMoveException
 from move.Move import createFromString
 from move.MovementFactory2 import generate_moves
+import random
 
 
 class Backgammon:
@@ -12,26 +12,59 @@ class Backgammon:
         self.board = Board()
         self.dice = Dice()
 
-    def run(self):
+    def runRandom(self):
         while self.board.getWinner() == NONE:
-            # self.dice.roll()
-            # print(self.dice)
-            # print(self.board)
-            # generate_moves(self.board, self.colors[0], self.dice)
+            print("")
+            # self.dice.rollNoDoubles()
+            self.dice.setRoll(4, 2)
+            print("Black rolled: " + str(self.dice))
+            moves = generate_moves(self.board, self.colors[0], self.dice)
+            move = random.choice(list(moves))
+            self.board.applyBoard(move.getBoardAfter())
+            print(self.board)
+
             # self.getMove(self.colors[0])
-            # if self.board.getWinner() != NONE:
-            #     break
+            if self.board.getWinner() != NONE:
+                break
 
             print("")
-            self.dice.roll()
-            # self.dice.setRoll(1, 2)
-            print(self.dice)
+            self.dice.rollNoDoubles()
+            print("White rolled: " + str(self.dice))
+            moves = generate_moves(self.board, self.colors[1], self.dice)
+            move = random.choice(list(moves))
+            self.board.applyBoard(move.getBoardAfter())
             print(self.board)
-            generate_moves(self.board, self.colors[1], self.dice)
-            self.getMove(self.colors[1])
+
             if self.board.getWinner() != NONE:
                 break
         return "Winner, " + self.board.getWinner() + "!"
+
+    def runOnce(self):
+        print("")
+        # self.dice.rollNoDoubles()
+        self.dice.setRoll(4, 2)
+        print("Black rolled: " + str(self.dice))
+        moves = generate_moves(self.board, self.colors[0], self.dice)
+        move = random.choice(list(moves))
+        self.board.applyBoard(move.getBoardAfter())
+        print(self.board)
+
+        # self.getMove(self.colors[0])
+        if self.board.getWinner() != NONE:
+            print("Winner, " + self.board.getWinner() + "!")
+            return
+
+        print("")
+        self.dice.rollNoDoubles()
+        print("White rolled: " + str(self.dice))
+        moves = generate_moves(self.board, self.colors[1], self.dice)
+        move = random.choice(list(moves))
+        self.board.applyBoard(move.getBoardAfter())
+        print(self.board)
+
+        if self.board.getWinner() != NONE:
+            print("Winner, " + self.board.getWinner() + "!")
+            return
 
     def getMove(self, color):
         success = False
@@ -44,9 +77,9 @@ class Backgammon:
                 success = True
 
     def test(self):
-        self.board.testSetup4()
-        self.run()
+        self.board.testSetup5()
+        self.runOnce()
 
 
 b = Backgammon()
-b.test()
+b.runRandom()

@@ -357,3 +357,26 @@ class Board:
 
         self.blackCheckersTaken = 0
         self.whiteCheckersTaken = 2
+
+    def testSetup5(self):
+        # roll 4,2 BLACK
+        self.pointsContent = [0] * 26
+        self.pointsContent[1] = 1
+        self.pointsContent[2] = -2
+        self.pointsContent[4] = -1
+        self.pointsContent[5] = -1
+        self.pointsContent[6] = -3
+        self.pointsContent[8] = -1
+        self.pointsContent[12] = 5
+        self.pointsContent[13] = -5
+        self.pointsContent[17] = 2
+        self.pointsContent[19] = 4
+        self.pointsContent[20] = 1
+        self.pointsContent[22] = 1
+        self.pointsContent[24] = -2
+
+        self.blackCheckers = {1, 12, 17, 19, 20, 22}
+        self.whiteCheckers = {24, 13, 8, 6, 5, 4, 2}
+
+        self.blackCheckersTaken = 1
+        self.whiteCheckersTaken = 0

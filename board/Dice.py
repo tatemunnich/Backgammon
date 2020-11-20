@@ -11,6 +11,11 @@ class Dice:
 		self.die1 = random.randint(1, 6)
 		self.die2 = random.randint(1, 6)
 
+	def rollNoDoubles(self):
+		self.roll()
+		while self.isDoubles():
+			self.roll()
+
 	def setRoll(self, die1, die2):
 		self.die1 = die1
 		self.die2 = die2
