@@ -185,7 +185,7 @@ class TakeOffMovement:
 
 class Move:
 
-    def __init__(self, board_before, color, dice, movements, board_after=None):
+    def __init__(self, board_before, color, dice, movements, board_after):
         self.color = color
         self.dice = dice
         self.movements = movements
@@ -196,13 +196,13 @@ class Move:
         else:
             self.distances = [dice.getDie1(), dice.getDie2()]
 
-        if movements != "empty":
-            try:
-                self.apply()
-            except IllegalMoveException as e:
-                print(e)
-        else:
-            self.board_after = self.board_before
+        # if movements != "empty":
+        #     try:
+        #         self.apply()
+        #     except IllegalMoveException as e:
+        #         print(e)
+        # else:
+        #     self.board_after = self.board_before
 
     def __str__(self):
         strg = self.color
