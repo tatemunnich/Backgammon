@@ -380,3 +380,40 @@ class Board:
 
         self.blackCheckersTaken = 1
         self.whiteCheckersTaken = 0
+
+    def testSetup6(self):
+        # black roll 6,4
+        self.pointsContent = [0] * 26
+        self.pointsContent[1] = 2
+        self.pointsContent[12] = 5
+        self.pointsContent[17] = 3
+        self.pointsContent[19] = 5
+        self.pointsContent[24] = -2
+        self.pointsContent[13] = -5
+        self.pointsContent[4] = -3
+        self.pointsContent[6] = -5
+
+        self.blackCheckers = {12, 17, 19}
+        self.whiteCheckers = {24, 13, 6, 4}
+
+        self.blackCheckersTaken = 2
+        self.whiteCheckersTaken = 0
+
+    def testSetup7(self):
+        # white roll 2,4
+        self.pointsContent = [0] * 26
+        self.pointsContent[7] = 2
+        self.pointsContent[12] = 5
+        self.pointsContent[17] = 3
+        self.pointsContent[19] = 5
+
+        self.pointsContent[4] = -1
+        self.pointsContent[3] = -3
+        self.pointsContent[1] = -10
+        self.pointsContent[0] = -1
+
+        self.blackCheckers = {7, 12, 17, 19}
+        self.whiteCheckers = {4, 3, 1}
+
+        self.blackCheckersTaken = 0
+        self.whiteCheckersTaken = 0

@@ -195,10 +195,14 @@ class Move:
             self.distances = [dice.getDie1()] * 4
         else:
             self.distances = [dice.getDie1(), dice.getDie2()]
-        try:
-            self.apply()
-        except IllegalMoveException as e:
-            print(e)
+
+        if movements != "empty":
+            try:
+                self.apply()
+            except IllegalMoveException as e:
+                print(e)
+        else:
+            self.board_after = self.board_before
 
     def __str__(self):
         strg = self.color
@@ -217,20 +221,20 @@ class Move:
 
     def apply(self):
         #  Check that the moves use the given dice
-        distances = self.distances
-        for movement in self.movements:
-            try:
-                distances.remove(movement.getDieUsed())
-            except ValueError:
-                raise IllegalMoveException("Move cannot be made given the dice")
-
-        #  Test to make sure a player used all of their dice that they could
-        #  TODO: sometimes a player can move either die but not both (rules say must use larger)
-        #  TODO: sometimes a player can move some doubles but not all
-        if len(distances) > 0:
-            for die in distances:
-                if self.canMove(die):
-                    raise IllegalMoveException("You must use all of your dice")
+        # distances = self.distances
+        # for movement in self.movements:
+        #     try:
+        #         distances.remove(movement.getDieUsed())
+        #     except ValueError:
+        #         raise IllegalMoveException("Move cannot be made given the dice")
+        #
+        # #  Test to make sure a player used all of their dice that they could
+        # #  TODO: sometimes a player can move either die but not both (rules say must use larger)
+        # #  TODO: sometimes a player can move some doubles but not all
+        # if len(distances) > 0:
+        #     for die in distances:
+        #         if self.canMove(die):
+        #             raise IllegalMoveException("You must use all of your dice")
 
         #  Test if all moves are valid
         scratch = getScratch(self.board_before)
