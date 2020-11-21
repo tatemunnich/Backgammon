@@ -1,4 +1,3 @@
-from itertools import permutations
 from board.Board import getDirection, getScratch, getRelativePointLocation, getOtherColor, Board
 from move.IllegalMoveException import IllegalMoveException
 from move.Move import NormalMovement, Move, BarMovement, TakeOffMovement

@@ -185,12 +185,12 @@ class TakeOffMovement:
 
 class Move:
 
-    def __init__(self, board_before, color, dice, movements):
+    def __init__(self, board_before, color, dice, movements, board_after=None):
         self.color = color
         self.dice = dice
         self.movements = movements
         self.board_before = board_before
-        self.board_after = None
+        self.board_after = board_after
         if dice.isDoubles():
             self.distances = [dice.getDie1()] * 4
         else:

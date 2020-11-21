@@ -1,4 +1,5 @@
 import time
+import cProfile
 
 from board.Board import Board, BLACK, WHITE, NONE
 from board.Dice import Dice
@@ -40,7 +41,8 @@ class Backgammon:
                 break
         print("Winner, " + self.board.getWinner() + "!")
 
-    def runRandom(self, verbose=True):
+    def runRandom(self):
+        verbose = False
         while self.board.getWinner() == NONE:
             if verbose:
                 print("")
@@ -116,5 +118,10 @@ class Backgammon:
         self.runOnce()
 
 
-b = Backgammon()
-b.runRandom(verbose=False)
+def runRandom():
+    for i in range(20):
+        b = Backgammon()
+        b.runRandom()
+
+
+cProfile.run('runRandom()')
