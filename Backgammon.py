@@ -1,3 +1,5 @@
+import time
+
 from board.Board import Board, BLACK, WHITE, NONE
 from board.Dice import Dice
 from move.Move import createFromString
@@ -14,56 +16,61 @@ class Backgammon:
 
     def playAgainstRandom(self):
         while self.board.getWinner() == NONE:
-            print("")
             self.dice.rollNoDoubles()
-            self.dice.setRoll(4, 2)
+            moves = generate_moves(self.board, self.colors[0], self.dice, verbose=True)
             print("Black rolled: " + str(self.dice))
-            moves = generate_moves(self.board, self.colors[0], self.dice)
             move = random.choice(list(moves))
             self.board.applyBoard(move.getBoardAfter())
             print(self.board)
-
             # self.getMove(self.colors[0])
             if self.board.getWinner() != NONE:
                 break
 
             print("")
             self.dice.rollNoDoubles()
+            print("Black moved " + str(move))
             print("White rolled: " + str(self.dice))
             moves = generate_moves(self.board, self.colors[1], self.dice)
-            move = random.choice(list(moves))
+            move = self.getMove(self.colors[1], moves)
             self.board.applyBoard(move.getBoardAfter())
             print(self.board)
+            time.sleep(2)
 
             if self.board.getWinner() != NONE:
                 break
-        return "Winner, " + self.board.getWinner() + "!"
+        print("Winner, " + self.board.getWinner() + "!")
 
-    def runRandom(self):
+    def runRandom(self, verbose=True):
         while self.board.getWinner() == NONE:
-            print("")
+            if verbose:
+                print("")
             self.dice.roll()
-            print("Black rolled: " + str(self.dice))
+            if verbose:
+                print("Black rolled: " + str(self.dice))
             moves = generate_moves(self.board, self.colors[0], self.dice)
             move = random.choice(list(moves))
             self.board.applyBoard(move.getBoardAfter())
-            print(self.board)
+            if verbose:
+                print(self.board)
 
             # self.getMove(self.colors[0])
             if self.board.getWinner() != NONE:
                 break
 
-            print("")
+            if verbose:
+                print("")
             self.dice.roll()
-            print("White rolled: " + str(self.dice))
+            if verbose:
+                print("White rolled: " + str(self.dice))
             moves = generate_moves(self.board, self.colors[1], self.dice)
             move = random.choice(list(moves))
             self.board.applyBoard(move.getBoardAfter())
-            print(self.board)
+            if verbose:
+                print(self.board)
 
             if self.board.getWinner() != NONE:
                 break
-        return "Winner, " + self.board.getWinner() + "!"
+        print("Winner, " + self.board.getWinner() + "!")
 
     def runOnceBlack(self):
         print("")
@@ -97,15 +104,12 @@ class Backgammon:
             print("Winner, " + self.board.getWinner() + "!")
             return
 
-    def getMove(self, color):
-        success = False
-        while not success:
+    def getMove(self, color, move_list):
+        while True:
             text = input("Enter the move for " + color + ": ")
             move = createFromString(text, color, self.board, self.dice)
-            print(move)
-            if move:
-                self.board.applyBoard(move.getBoardAfter())
-                success = True
+            if move in move_list:
+                return move
 
     def test(self):
         self.board.testSetup7()
@@ -113,4 +117,4 @@ class Backgammon:
 
 
 b = Backgammon()
-b.runRandom()
+b.runRandom(verbose=False)

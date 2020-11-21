@@ -4,7 +4,7 @@ from move.IllegalMoveException import IllegalMoveException
 from move.Move import NormalMovement, Move, BarMovement, TakeOffMovement
 
 
-def generate_moves(board, color, dice):
+def generate_moves(board, color, dice, verbose=False):
     moves = set()
     initial_locations = board.getCheckerSet(color)
     die_1 = dice.getDie1()
@@ -70,8 +70,9 @@ def generate_moves(board, color, dice):
                 if first_movement:
                     moves.add(Move(board, color, dice, [first_movement]))
 
-    print(str(len(moves)) + " moves: ", end="")
-    print(moves)
+    if verbose:
+        print(str(len(moves)) + " moves: ", end="")
+        print(moves)
     return moves
 
 
