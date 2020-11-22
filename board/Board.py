@@ -1,5 +1,5 @@
 from move.IllegalMoveException import IllegalMoveException
-from copy import deepcopy
+from copy import deepcopy, copy
 
 BLACK = "BLACK"
 WHITE = "WHITE"
@@ -40,25 +40,38 @@ def getRelativePointLocation(color, point):
 
 class Board:
 
-    def __init__(self):
-        self.pointsContent = [0] * 26
-        self.pointsContent[1] = 2
-        self.pointsContent[12] = 5
-        self.pointsContent[17] = 3
-        self.pointsContent[19] = 5
-        self.pointsContent[24] = -2
-        self.pointsContent[13] = -5
-        self.pointsContent[8] = -3
-        self.pointsContent[6] = -5
+    def __init__(self, pointsContent=None, blackCheckers=None, whiteCheckers=None,
+                 blackCheckersTaken=0, whiteCheckersTaken=0, doubleCube=1, doublePossession=NONE):
+        if whiteCheckers is None:
+            whiteCheckers = {24, 13, 8, 6}
+        if blackCheckers is None:
+            blackCheckers = {1, 12, 17, 19}
+        if pointsContent is None:
+            pointsContent = [0] * 26
+            pointsContent[1] = 2
+            pointsContent[12] = 5
+            pointsContent[17] = 3
+            pointsContent[19] = 5
+            pointsContent[24] = -2
+            pointsContent[13] = -5
+            pointsContent[8] = -3
+            pointsContent[6] = -5
+        self.pointsContent = pointsContent
 
-        self.blackCheckers = {1, 12, 17, 19}
-        self.whiteCheckers = {24, 13, 8, 6}
+        self.blackCheckers = blackCheckers
+        self.whiteCheckers = whiteCheckers
 
-        self.blackCheckersTaken = 0
-        self.whiteCheckersTaken = 0
+        self.blackCheckersTaken = blackCheckersTaken
+        self.whiteCheckersTaken = whiteCheckersTaken
 
-        self.doubleCube = 1
-        self.doublePossession = NONE
+        self.doubleCube = doubleCube
+        self.doublePossession = doublePossession
+
+    def __deepcopy__(self, memo={}):
+        _copy = type(self)(copy(self.pointsContent), copy(self.blackCheckers),
+                           copy(self.whiteCheckers), self.blackCheckersTaken, self.whiteCheckersTaken,
+                           self.doubleCube, self.doublePossession)
+        return _copy
 
     def applyBoard(self, other_board):
         self.pointsContent = other_board.pointsContent

@@ -41,8 +41,7 @@ class Backgammon:
                 break
         print("Winner, " + self.board.getWinner() + "!")
 
-    def runRandom(self):
-        verbose = False
+    def runRandom(self, verbose=False):
         while self.board.getWinner() == NONE:
             if verbose:
                 print("")
@@ -50,6 +49,8 @@ class Backgammon:
             if verbose:
                 print("Black rolled: " + str(self.dice))
             moves = generate_moves(self.board, self.colors[0], self.dice)
+            if verbose:
+                print(str(len(moves)) + " moves: " + str(moves))
             move = random.choice(list(moves))
             self.board.applyBoard(move.getBoardAfter())
             if verbose:
@@ -65,6 +66,8 @@ class Backgammon:
             if verbose:
                 print("White rolled: " + str(self.dice))
             moves = generate_moves(self.board, self.colors[1], self.dice)
+            if verbose:
+                print(str(len(moves)) + " moves: " + str(moves))
             move = random.choice(list(moves))
             self.board.applyBoard(move.getBoardAfter())
             if verbose:
@@ -121,7 +124,7 @@ class Backgammon:
 def runRandom():
     for i in range(20):
         b = Backgammon()
-        b.runRandom()
+        b.runRandom(verbose=False)
 
 
 cProfile.run('runRandom()')
