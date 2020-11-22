@@ -305,7 +305,7 @@ class Board:
         else:
             return NONE
 
-    def testSetup(self):
+    def testSetup1(self):
         # roll 5,1
         self.pointsContent = [0] * 26
         self.pointsContent[1] = 2
@@ -322,7 +322,7 @@ class Board:
         self.whiteCheckersTaken = 0
 
     def testSetup2(self):
-        # roll 1,2
+        # roll 1,2 white
         self.pointsContent = [0] * 26
         self.pointsContent[1] = 1
         self.pointsContent[5] = 1
@@ -339,7 +339,7 @@ class Board:
         self.whiteCheckersTaken = 0
 
     def testSetup3(self):
-        # roll 1,2
+        # roll white 1,2
         self.pointsContent = [0] * 26
         self.pointsContent[1] = 1
         self.pointsContent[12] = 6
@@ -353,23 +353,6 @@ class Board:
 
         self.blackCheckersTaken = 0
         self.whiteCheckersTaken = 0
-
-    def testSetup4(self):
-        # roll
-        self.pointsContent = [0] * 26
-        self.pointsContent[1] = 2
-        self.pointsContent[12] = 5
-        self.pointsContent[17] = 3
-        self.pointsContent[19] = 5
-        self.pointsContent[13] = -5
-        self.pointsContent[8] = -3
-        self.pointsContent[6] = -5
-
-        self.blackCheckers = {1, 12, 17, 19}
-        self.whiteCheckers = {24, 13, 8, 6}
-
-        self.blackCheckersTaken = 0
-        self.whiteCheckersTaken = 2
 
     def testSetup5(self):
         # roll 4,2 BLACK

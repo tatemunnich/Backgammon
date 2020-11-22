@@ -16,7 +16,8 @@ class Dice:
 		while self.isDoubles():
 			self.roll()
 
-	def setRoll(self, die1, die2):
+	def setRoll(self, dice: tuple):
+		die1, die2 = dice
 		self.die1 = die1
 		self.die2 = die2
 
