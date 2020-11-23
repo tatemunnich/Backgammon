@@ -201,11 +201,11 @@ class Board:
         double_stuff = self.doubleCube == other.doubleCube and self.doublePossession == other.doublePossession
         return type(self) == type(other) and self.pointsContent == other.pointsContent and double_stuff
 
-    def getCheckerSet(self, color):
+    def getCheckers(self, color):
         if color == BLACK:
-            return self.blackCheckers
+            return sorted(self.blackCheckers)
         elif color == WHITE:
-            return self.whiteCheckers
+            return sorted(self.whiteCheckers, reverse=True)
 
     def colorAt(self, location):
         if self.pointsContent[location] < 0:

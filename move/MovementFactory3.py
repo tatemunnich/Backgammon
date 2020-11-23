@@ -1,11 +1,11 @@
-from board.Board import getDirection, getScratch, getRelativePointLocation, getOtherColor
+from board.Board import getDirection, getScratch, getRelativePointLocation, getOtherColor, Board
 from move.IllegalMoveException import IllegalMoveException
 from move.Move import NormalMovement, Move, BarMovement, TakeOffMovement
 
 
 def generate_moves(board, color, dice, verbose=False):
     moves = set()
-    initial_locations = board.getCheckerSet(color)
+    initial_locations = board.getCheckers(color)
     die_1 = dice.getDie1()
     die_2 = dice.getDie2()
     can_move_1_first = False
@@ -18,7 +18,7 @@ def generate_moves(board, color, dice, verbose=False):
             can_move_1_first = True
             first_movement_1, board_after_1 = first_1
             # print("first move1 would work: " + str(first_movement_1))
-            locations_1 = board_after_1.getCheckerSet(color)
+            locations_1 = board_after_1.getCheckers(color)
             if len(locations_1) == 0:
                 moves.add(Move(board, color, dice, [first_movement_1], board_after_1))
                 return moves
@@ -36,7 +36,7 @@ def generate_moves(board, color, dice, verbose=False):
             can_move_2_first = True
             first_movement_2, board_after_2 = first_2
             # print("first move2 would work: " + str(first_movement_2))
-            locations_2 = board_after_2.getCheckerSet(color)
+            locations_2 = board_after_2.getCheckers(color)
             if len(locations_2) == 0:
                 moves.add(Move(board, color, dice, [first_movement_2], board_after_2))
                 return moves
@@ -78,12 +78,6 @@ def generate_moves(board, color, dice, verbose=False):
         print(str(len(moves)) + " moves: ", end="")
         print(moves)
     return moves
-
-
-def getLocationsForDoubles(board, color, die):
-    locations = board.getCheckerSet(color)
-    for location in locations:
-        buildMovement(board, color, die, location)
 
 
 def buildMovement(board, color, die, location):
