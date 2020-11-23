@@ -21,6 +21,12 @@ class Dice:
 		self.die1 = die1
 		self.die2 = die2
 
+	def getDiceDistances(self):
+		if self.isDoubles():
+			return 4*[self.die1]
+		else:
+			return [self.die1, self.die2]
+
 	def getDice(self):
 		return self.die1, self.die2
 
