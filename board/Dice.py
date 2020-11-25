@@ -3,9 +3,16 @@ import random
 
 class Dice:
 
-	def __init__(self):
-		self.die1 = random.randint(1, 6)
-		self.die2 = random.randint(1, 6)
+	def __init__(self, die1=None, die2=None):
+		if die1 is None:
+			self.die1 = random.randint(1, 6)
+		else:
+			self.die1 = die1
+
+		if die2 is None:
+			self.die2 = random.randint(1, 6)
+		else:
+			self.die2 = die2
 
 	def roll(self):
 		self.die1 = random.randint(1, 6)
@@ -21,11 +28,11 @@ class Dice:
 		self.die1 = die1
 		self.die2 = die2
 
-	def getDiceDistances(self):
+	def getDistances(self):
 		if self.isDoubles():
-			return 4*[self.die1]
+			return {self.die1: 4}
 		else:
-			return [self.die1, self.die2]
+			return {self.die1: 1, self.die2: 1}
 
 	def getDice(self):
 		return self.die1, self.die2

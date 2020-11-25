@@ -162,11 +162,9 @@ class Move:
         self.movements = movements
         self.board_before = board_before
         self.board_after = board_after
-        if dice.isDoubles():
-            self.distances = [dice.getDie1()] * 4
-        else:
-            self.distances = [dice.getDie1(), dice.getDie2()]
-            
+        die_1, die_2 = self.dice.getDice()
+        self.distances = {die_1: 4} if dice.isDoubles() else {die_1: 1, die_2: 1}
+
     def setBoardAfter(self, board_after):
         self.board_after = board_after
 

@@ -1,7 +1,8 @@
 from copy import copy
-from anytree import Node
+from anytree import Node, RenderTree, PreOrderIter
 
 from board.Board import getOtherColor, getRelativePointLocation, getScratch, getDirection, Board
+from board.Dice import Dice
 from move.IllegalMoveException import IllegalMoveException
 from move.Move import BarMovement, TakeOffMovement, NormalMovement
 import cProfile
@@ -54,132 +55,168 @@ def get_next_location_move_on(point_list, starting_loc, color):
     return False
 
 
-def getMovesForDoubles(board, color, distance_dict, starting_loc):
-    result = []
-
+def getMovesForDoubles(board, color, distance_dict, starting_loc, root):
     # BASE CASES
     if not distance_dict:
-        return []
+        return
 
     if not starting_loc:
-        return []
+        return
 
     #############################################
 
     # Pieces on bar
     if board.numBar(color) > 0:
-        for die in distance_dict:
-            if board.numAt(getOtherColor(color), getRelativePointLocation(getOtherColor(color), die)) <= 1:
-                scratch = getScratch(board)
-                try:
-                    move = BarMovement(color, die, getRelativePointLocation(getOtherColor(color), die))
-                    move.apply(scratch)
-                    result.append(move)
-                    distance_dict = update_distance_dict(die, distance_dict)
-                    rest = getMovesForDoubles(scratch, color, distance_dict, board.farthestBack(color))
-                    result.extend(rest)
-                except IllegalMoveException:
-                    pass
-        return []
+        die_1 = max(distance_dict)
+        die_2 = min(distance_dict)
+        try:
+            scratch = board.__deepcopy__()
+            move = BarMovement(color, die_1, getRelativePointLocation(getOtherColor(color), die_1))
+            move.apply(scratch)
+            # apply die 1
+            move_node = Node(move, parent=root)
+            distance_dict_1 = update_distance_dict(die_1, distance_dict)
+            getMovesForDoubles(scratch, color, distance_dict_1, starting_loc, move_node)
+        except IllegalMoveException:
+            pass
 
-    # Able to bear off
-    elif board.allInHome(color):
-        largest_die = max(distance_dict)
-        if largest_die >= getRelativePointLocation(color, board.farthestBack(color)):
-            scratch = getScratch(board)
+        if die_1 != die_2:
             try:
-                move = TakeOffMovement(color, largest_die, board.farthestBack(color))
+                # apply die 2 if different
+                scratch = board.__deepcopy__()
+                move = BarMovement(color, die_2, getRelativePointLocation(getOtherColor(color), die_2))
                 move.apply(scratch)
-                result.append(move)
-                distance_dict = update_distance_dict(largest_die, distance_dict)
-                rest = getMovesForDoubles(scratch, color, distance_dict, board.farthestBack(color))
-                result.extend(rest)
+                # apply die 2
+                move_node = Node(move, parent=root)
+                distance_dict_1 = update_distance_dict(die_1, distance_dict)
+                getMovesForDoubles(scratch, color, distance_dict_1, starting_loc, move_node)
+            except IllegalMoveException:
+                pass
+
+    # # Able to bear off
+    elif board.allInHome(color):
+        die_1 = max(distance_dict)
+        die_2 = min(distance_dict)
+
+        if die_1 >= getRelativePointLocation(color, board.farthestBack(color)):
+            scratch = board.__deepcopy__()
+            try:
+                move = TakeOffMovement(color, die_1, board.farthestBack(color))
+                move.apply(scratch)
+                move_node = Node(move, parent=root)
+                distance_dict = update_distance_dict(die_1, distance_dict)
+                new_start = get_next_location(scratch.getCheckers(color), scratch.farthestBack(color), color)
+                getMovesForDoubles(scratch, color, distance_dict, new_start, move_node)
             except IllegalMoveException:
                 pass
 
         else:
-            for die in distance_dict:
+            try:
+                scratch = board.__deepcopy__()
+                move = TakeOffMovement(color, die_1, starting_loc)
+                move.apply(scratch)
+                move_node = Node(move, parent=root)
+                distance_dict = update_distance_dict(die_1, distance_dict)
+                new_start = get_next_location(scratch.getCheckers(color), starting_loc, color)
+                getMovesForDoubles(scratch, color, distance_dict, new_start, move_node)
+            except IllegalMoveException:
                 try:
-                    scratch = getScratch(board)
-                    move = TakeOffMovement(color, die, getRelativePointLocation(color, die))
+                    scratch = board.__deepcopy__()
+                    move = NormalMovement(color, die_1, starting_loc, starting_loc + die_1 * getDirection(color))
                     move.apply(scratch)
-                    result.append(move)
-                    distance_dict = update_distance_dict(die, distance_dict)
-                    rest = getMovesForDoubles(scratch, color, distance_dict, board.farthestBack(color))
-                    result.extend(rest)
+                    # apply die 1
+                    move_node = Node(move, parent=root)
+                    distance_dict_1 = update_distance_dict(die_1, distance_dict)
+                    new_start = get_next_location(scratch.getCheckers(color), starting_loc, color)
+                    getMovesForDoubles(scratch, color, distance_dict_1, new_start, move_node)
+                except IllegalMoveException:
+                    pass
+
+            if die_1 != die_2:
+                try:
+                    scratch = board.__deepcopy__()
+                    move = TakeOffMovement(color, die_2, starting_loc)
+                    move.apply(scratch)
+                    move_node = Node(move, parent=root)
+                    distance_dict = update_distance_dict(die_2, distance_dict)
+                    new_start = get_next_location(scratch.getCheckers(color), starting_loc, color)
+                    getMovesForDoubles(scratch, color, distance_dict, new_start, move_node)
                 except IllegalMoveException:
                     try:
-                        scratch = getScratch(board)
-                        move = NormalMovement(color, die, starting_loc, starting_loc+die*getDirection(color))
+                        scratch = board.__deepcopy__()
+                        move = NormalMovement(color, die_2, starting_loc, starting_loc + die_2 * getDirection(color))
                         move.apply(scratch)
-                        result.append(move)
-                        distance_dict = update_distance_dict(die, distance_dict)
+                        # apply die 2
+                        move_node = Node(move, parent=root)
+                        distance_dict_1 = update_distance_dict(die_2, distance_dict)
                         new_start = get_next_location(scratch.getCheckers(color), starting_loc, color)
-                        rest = getMovesForDoubles(scratch, color, distance_dict, new_start)
-                        result.extend(rest)
+                        getMovesForDoubles(scratch, color, distance_dict_1, new_start, move_node)
                     except IllegalMoveException:
                         pass
-    #  Other
+
+            # don't apply either
+            more_start = get_next_location_move_on(board.getCheckers(color), starting_loc, color)
+            getMovesForDoubles(board, color, distance_dict, more_start, root)
+
+    # All other cases: only normal moves remain
     else:
         die_1 = max(distance_dict)
         die_2 = min(distance_dict)
         try:
-            scratch = getScratch(board)
+            scratch = board.__deepcopy__()
             move = NormalMovement(color, die_1, starting_loc, starting_loc + die_1 * getDirection(color))
             move.apply(scratch)
             # apply die 1
+            move_node = Node(move, parent=root)
             distance_dict_1 = update_distance_dict(die_1, distance_dict)
             new_start = get_next_location(scratch.getCheckers(color), starting_loc, color)
-            rests = getMovesForDoubles(scratch, color, distance_dict_1, new_start)
-            moves = [move]
-            moves.extend(rests)
-            result.append(moves)
-            # apply die 2 if different
-            if die_1 != die_2 and board.numAt(getOtherColor(color), starting_loc + die_1 * getDirection(color)) == 1:
-                try:
-                    scratch = getScratch(board)
-                    move = NormalMovement(color, die_2, starting_loc, starting_loc + die_2 * getDirection(color))
-                    move.apply(scratch)
-                    # apply die 2
-                    distance_dict_1 = update_distance_dict(die_2, distance_dict)
-                    new_start = get_next_location(scratch.getCheckers(color), starting_loc, color)
-                    rests = getMovesForDoubles(scratch, color, distance_dict_1, new_start)
-                    moves = [move]
-                    moves.extend(rests)
-                    result.append(moves)
-                except IllegalMoveException:
-                    pass
+            getMovesForDoubles(scratch, color, distance_dict_1, new_start, move_node)
         except IllegalMoveException:
-            if die_1 != die_2:
-                try:
-                    scratch = getScratch(board)
-                    move = NormalMovement(color, die_2, starting_loc, starting_loc + die_2 * getDirection(color))
-                    move.apply(scratch)
-                    # apply die 2
-                    distance_dict_1 = update_distance_dict(die_2, distance_dict)
-                    new_start = get_next_location(scratch.getCheckers(color), starting_loc, color)
-                    rests = getMovesForDoubles(scratch, color, distance_dict_1, new_start)
-                    moves = [move]
-                    moves.extend(rests)
-                    result.append(moves)
-                except IllegalMoveException:
-                    pass
+            pass
+
+        if die_1 != die_2:
+            try:
+                # apply die 2 if different
+                scratch = board.__deepcopy__()
+                move = NormalMovement(color, die_2, starting_loc, starting_loc + die_2 * getDirection(color))
+                move.apply(scratch)
+                # apply die 2
+                move_node = Node(move, parent=root)
+                distance_dict_1 = update_distance_dict(die_2, distance_dict)
+                new_start = get_next_location(scratch.getCheckers(color), starting_loc, color)
+                getMovesForDoubles(scratch, color, distance_dict_1, new_start, move_node)
+
+            except IllegalMoveException:
+                pass
 
         # don't apply either
         more_start = get_next_location_move_on(board.getCheckers(color), starting_loc, color)
-        more = getMovesForDoubles(board, color, distance_dict, more_start)
-        result.extend(more)
-    return result
+        getMovesForDoubles(board, color, distance_dict, more_start, root)
+    return root
+
+
+def generateMoves2(board: Board, color: str, dice: Dice, verbose=False):
+    root = Node("root")
+    getMovesForDoubles(board, color, dice.getDistances(), board.farthestBack(color), root)
+    if verbose:
+        print(board)
+        print(dice)
+        print(RenderTree(root).by_attr())
+    height = root.height
+    # TODO: where they can use either die but not both, use larger
+    return tuple(PreOrderIter(root, filter_=lambda node: node.is_leaf and node.depth == height))
 
 
 def time():
     b = Board()
-    print(getMovesForDoubles(b, "BLACK", {1: 4}, b.farthestBack('BLACK')))
+    d = Dice()
+    for i in range(1000):
+        print(i)
+        ms = generateMoves2(b, "BLACK", d, verbose=False)
+        d.roll()
 
 
 # cProfile.run('time()')
 
-b = Board()
-print(b)
-mooves = getMovesForDoubles(b, "BLACK", {1: 4}, b.farthestBack('BLACK'))
-print(mooves)
+m = generateMoves2(Board(), "BLACK", Dice(2, 2), verbose=True)
+print(len(m))
