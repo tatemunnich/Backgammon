@@ -1,4 +1,7 @@
 from typing import List
+
+from anytree import Node
+
 from board.Dice import Dice
 from move.IllegalMoveException import IllegalMoveException
 from board.Board import getDirection, getOtherColor, getRelativePointLocation, Board
@@ -17,7 +20,7 @@ def getMove(color, move_list):
 def createFromString(text: str, color: str, move_list):
     input_list = text.split(" ")
     perms = permutations(input_list)
-    str_move_list = [str(move).replace(color+" ", "") for move in move_list]
+    str_move_list = [str(move).replace(color + " ", "") for move in move_list]
     for move_list in perms:
         move = " ".join(move_list)
         if move in str_move_list:
@@ -33,6 +36,7 @@ class NormalMovement:
         self.die = die
         self.start = start
         self.end = end
+        self.hit = False
         if (not (1 <= self.start <= 24)) or (not (1 <= self.end <= 24)):
             raise IllegalMoveException("Invalid location")
 
@@ -60,12 +64,16 @@ class NormalMovement:
         if board.numAt(getOtherColor(self.color), self.end) == 1:
             board.removeFromLocation(getOtherColor(self.color), self.end)
             board.moveToBar(getOtherColor(self.color))
+            self.hit = True
 
         board.removeFromLocation(self.color, self.start)
         board.moveToLocation(self.color, self.end)
 
     def __str__(self):
-        return str(self.start) + "/" + str(self.end)
+        res = str(self.start) + "/" + str(self.end)
+        if self.hit:
+            res += "*"
+        return res
 
     def __repr__(self):
         return self.__str__()
@@ -81,6 +89,7 @@ class BarMovement:
         self.color = color
         self.die = die
         self.end = end
+        self.hit = False
         if not (1 <= self.end <= 24):
             raise IllegalMoveException("Invalid location")
 
@@ -101,12 +110,16 @@ class BarMovement:
         if board.numAt(getOtherColor(self.color), self.end) == 1:
             board.removeFromLocation(getOtherColor(self.color), self.end)
             board.moveToBar(getOtherColor(self.color))
+            self.hit = True
 
         board.moveFromBar(self.color)
         board.moveToLocation(self.color, self.end)
 
     def __str__(self):
-        return "bar/" + str(self.end)
+        res = "bar/" + str(self.end)
+        if self.hit:
+            res += "*"
+        return res
 
     def __repr__(self):
         return self.__str__()
@@ -121,6 +134,7 @@ class TakeOffMovement:
         self.color = color
         self.die = die
         self.start = start
+        self.end = None
         if not (1 <= self.start <= 24):
             raise IllegalMoveException("Invalid location")
 
@@ -138,7 +152,8 @@ class TakeOffMovement:
             raise IllegalMoveException("Move cannot be made given the die value " + str(self.die))
         elif getRelativePointLocation(self.color, self.start) < self.die:
             if board.farthestBack(self.color) != self.start:
-                raise IllegalMoveException("You must move the farthest back piece off that you can with die " + str(self.die))
+                raise IllegalMoveException(
+                    "You must move the farthest back piece off that you can with die " + str(self.die))
 
         # VALID MOVEMENT
         board.removeFromLocation(self.color, self.start)
@@ -154,16 +169,14 @@ class TakeOffMovement:
         return type(self) == type(other) and self.start == other.start and self.color == other.color
 
 
-class Move:
+class MoveNode(Node):
 
-    def __init__(self, board_before: Board, color: str, dice: Dice, movements: List[NormalMovement], board_after: Board):
+    def __init__(self, move, board_after: Board, color=None, dice=None, **kwargs):
+        super().__init__(move, **kwargs)
+        # self.name holds move from Node class
+        self.board_after = board_after
         self.color = color
         self.dice = dice
-        self.movements = movements
-        self.board_before = board_before
-        self.board_after = board_after
-        die_1, die_2 = self.dice.getDice()
-        self.distances = {die_1: 4} if dice.isDoubles() else {die_1: 1, die_2: 1}
 
     def setBoardAfter(self, board_after):
         self.board_after = board_after
@@ -172,27 +185,22 @@ class Move:
         return self.board_after
 
     def __str__(self):
-        strg = self.color
-        for movement in self.movements:
-            strg += " " + str(movement)
-        if len(self.movements) == 0:
-            strg += " could not move"
-        return strg
+        res = ""
+        if self.is_root:
+            # res += str(self.dice) + ":"
+            if self.is_leaf:
+                res += "(no play)"
+        else:
+            # TODO: add doubles and single piece move printing
+            parent = self.parent
+            res += str(parent) + " " + str(self.name)
+        return res.strip()
 
     def __repr__(self):
         return str(self)
 
     def __hash__(self):
-        if self.board_after is None:
-            raise NameError("No Board after")
         return hash(self.board_after)
 
     def __eq__(self, other):
-        if type(self) == type(other):
-            if self.board_after is not None and other.board_after is not None:
-                board_stuff = self.board_after == other.board_after
-            else:
-                raise NameError("Board after has not been initalized by one of the two moves")
-            return self.color == other.color and board_stuff
-        else:
-            return False
+        return type(self) == type(other) and self.board_after == other.board_after

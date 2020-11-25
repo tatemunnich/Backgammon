@@ -47,4 +47,4 @@ class Dice:
 		return self.die1 == self.die2
 
 	def __str__(self):
-		return "Dice: " + str(self.getDice())
+		return str(self.die1) + "-" + str(self.die2)

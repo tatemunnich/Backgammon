@@ -4,7 +4,7 @@ import cProfile
 from board.Board import Board, BLACK, WHITE, NONE
 from board.Dice import Dice
 from move.Move import getMove
-from move.MovementFactory3 import generate_moves
+from move.MovementFactory import generateMoves2
 import random
 
 
@@ -18,7 +18,7 @@ class Backgammon:
     def playAgainstRandom(self):
         while self.board.getWinner() == NONE:
             self.dice.rollNoDoubles()
-            moves = generate_moves(self.board, self.colors[0], self.dice, verbose=True)
+            moves = generateMoves2(self.board, self.colors[0], self.dice, verbose=True)
             print("Black rolled: " + str(self.dice))
             move = random.choice(list(moves))
             self.board.applyBoard(move.getBoardAfter())
@@ -31,7 +31,7 @@ class Backgammon:
             self.dice.rollNoDoubles()
             print("Black moved " + str(move))
             print("White rolled: " + str(self.dice))
-            moves = generate_moves(self.board, self.colors[1], self.dice)
+            moves = generateMoves2(self.board, self.colors[1], self.dice)
             move = getMove(self.colors[1], moves)
             self.board.applyBoard(move.getBoardAfter())
             print(self.board)
@@ -58,7 +58,7 @@ class Backgammon:
             self.dice.setRoll(roll)
         if verbose:
             print("Black rolled: " + str(self.dice))
-        moves = generate_moves(self.board, self.colors[0], self.dice)
+        moves = generateMoves2(self.board, self.colors[0], self.dice)
         if verbose:
             print(str(len(moves)) + " moves: " + str(moves))
         move = random.choice(list(moves))
@@ -80,7 +80,7 @@ class Backgammon:
 
         if verbose:
             print("White rolled: " + str(self.dice))
-        moves = generate_moves(self.board, self.colors[1], self.dice)
+        moves = generateMoves2(self.board, self.colors[1], self.dice)
         if verbose:
             print(str(len(moves)) + " moves: " + str(moves))
         move = random.choice(list(moves))
@@ -97,11 +97,6 @@ class Backgammon:
             return winner
         winner = self.runOnceWhite(verbose=verbose, roll=white_roll)
         return winner
-
-    def test(self):
-        self.board.testSetup1()
-        print(self.board)
-        self.runOnce(verbose=True, black_roll=(1, 2))
 
 
 def runRandomTime():

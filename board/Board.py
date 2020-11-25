@@ -114,7 +114,7 @@ class Board:
             return " "
 
     def __str__(self):
-        strg = "+13-14-15-16-17-18------19-20-21-22-23-24-+\n"
+        strg = "\n+13-14-15-16-17-18------19-20-21-22-23-24-+\n"
         for i in range(1, 6):
             strg += "|"
 
@@ -288,9 +288,15 @@ class Board:
 
     def farthestBack(self, color):
         if color == BLACK:
-            return min(self.blackCheckers)
+            if self.blackCheckers:
+                return min(self.blackCheckers)
+            else:
+                return 25
         elif color == WHITE:
-            return max(self.whiteCheckers)
+            if self.whiteCheckers:
+                return max(self.whiteCheckers)
+            else:
+                return 0
 
     def allInHome(self, color):
         if self.numBar(color) != 0:
@@ -304,22 +310,3 @@ class Board:
             return WHITE
         else:
             return NONE
-
-    def testSetup7(self):
-        # white roll 2,4
-        self.pointsContent = [0] * 26
-        self.pointsContent[7] = 2
-        self.pointsContent[12] = 5
-        self.pointsContent[17] = 3
-        self.pointsContent[19] = 5
-
-        self.pointsContent[4] = -1
-        self.pointsContent[3] = -3
-        self.pointsContent[1] = -10
-        self.pointsContent[0] = -1
-
-        self.blackCheckers = {7, 12, 17, 19}
-        self.whiteCheckers = {4, 3, 1}
-
-        self.blackCheckersTaken = 0
-        self.whiteCheckersTaken = 0

@@ -2,10 +2,22 @@ import unittest
 
 from board.Board import Board
 from board.Dice import Dice
-from move.movement4 import generateMoves2
+from move.MovementFactory import generateMoves2
 
 
 class MyTestCase(unittest.TestCase):
+
+    def test_0(self):
+        b = Board()
+        d = Dice(5, 1)
+        m = generateMoves2(b, "BLACK", d)
+
+        print(b)
+        print(len(m))
+        print(m)
+        self.assertEqual(m, {"17/22 19/20", "12/17 19/20", "1/7", "1/2 12/17", "17/23",
+                             "12/18", "1/2 17/22", "17/22 17/18"})
+
     def test_1(self):
         b = Board()
         b.pointsContent = [0] * 26
@@ -118,29 +130,6 @@ class MyTestCase(unittest.TestCase):
         print(m)
 
         self.assertEqual(m, {})
-
-    def test_6(self):
-        b = Board()
-        b.pointsContent = [0] * 26
-        b.pointsContent[7] = 2
-        b.pointsContent[12] = 5
-        b.pointsContent[17] = 3
-        b.pointsContent[19] = 5
-        b.pointsContent[4] = -1
-        b.pointsContent[3] = -3
-        b.pointsContent[1] = -10
-        b.pointsContent[0] = -1
-        b.blackCheckers = {7, 12, 17, 19}
-        b.whiteCheckers = {4, 3, 1}
-        b.blackCheckersTaken = 0
-        b.whiteCheckersTaken = 0
-
-        d = Dice(4, 2)
-        m = generateMoves2(b, "WHITE", d)
-        print(b)
-        print(m)
-
-        self.assertEqual(m, {"4/off 3/1"})
 
     def test_6(self):
         b = Board()
