@@ -160,6 +160,54 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(len(m), 1)
         # self.assertEqual(m, {"4/off 3/1"})
 
+    def test_7(self):
+        b = Board()
+        b.pointsContent = [0] * 26
+        b.pointsContent[7] = 2
+        b.pointsContent[12] = 5
+        b.pointsContent[17] = 3
+        b.pointsContent[19] = 5
+        b.pointsContent[4] = -1
+        b.pointsContent[3] = -3
+        b.pointsContent[1] = -10
+        b.pointsContent[0] = -1
+        b.blackCheckers = {7, 12, 17, 19}
+        b.whiteCheckers = {4, 3, 1}
+        b.blackCheckersTaken = 0
+        b.whiteCheckersTaken = 0
+
+        d = Dice(2, 2)
+        m = generateMoves2(b, "WHITE", d)
+        print(b)
+        print(m)
+
+        self.assertEqual(len(m), 2)
+        # self.assertEqual(m, {"4/2 3/1 3/1 2/off", "4/2 3/1 3/1 3/1"})
+
+    def test_8(self):
+        b = Board()
+        b.pointsContent = [0] * 26
+        b.pointsContent[7] = 2
+        b.pointsContent[12] = 5
+        b.pointsContent[17] = 3
+        b.pointsContent[19] = 5
+        b.pointsContent[8] = -1
+        b.pointsContent[3] = -3
+        b.pointsContent[1] = -10
+        b.pointsContent[0] = -1
+        b.blackCheckers = {7, 12, 17, 19}
+        b.whiteCheckers = {8, 3, 1}
+        b.blackCheckersTaken = 0
+        b.whiteCheckersTaken = 0
+
+        d = Dice(2, 2)
+        m = generateMoves2(b, "WHITE", d)
+        print(b)
+        print(m)
+
+        self.assertEqual(len(m), 2)
+        # self.assertEqual(m, {"4/2 3/1 3/1 2/off", "4/2 3/1 3/1 3/1"})
+
 
 if __name__ == '__main__':
     unittest.main()
