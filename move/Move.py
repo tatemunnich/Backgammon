@@ -141,14 +141,12 @@ class TakeOffMovement:
         return type(self) == type(other) and self.start == other.start and self.color == other.color
 
 
-class MoveNode(Node):
+class MoveNode:
 
-    def __init__(self, move, board_after: Board, deep: int, color=None, dice=None, die=None, **kwargs):
-        super().__init__(move, **kwargs)
-        # self.name holds move from Node class
+    def __init__(self, name: str, board_after: Board, deep: int, die=None):
+        self.children = []
+        self.name = name
         self.board_after = board_after
-        self.color = color
-        self.dice = dice
         self.die = die
         self.deep = deep
 
@@ -159,16 +157,7 @@ class MoveNode(Node):
         return self.board_after
 
     def __str__(self):
-        res = ""
-        if self.is_root:
-            # res += str(self.dice) + ":"
-            if self.is_leaf:
-                res += "(no play)"
-        else:
-            # TODO: add doubles and single piece move printing
-            parent = self.parent
-            res += str(parent) + " " + str(self.name)
-        return res.strip()
+        return self.name
 
     def __repr__(self):
         return str(self)
@@ -178,3 +167,4 @@ class MoveNode(Node):
 
     def __eq__(self, other):
         return type(self) == type(other) and self.board_after == other.board_after
+

@@ -6,10 +6,6 @@ WHITE = "WHITE"
 NONE = "NONE"
 
 
-def getScratch(board):
-    return deepcopy(board)
-
-
 def getOtherColor(color):
     if color == BLACK:
         return WHITE
