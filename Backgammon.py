@@ -20,7 +20,7 @@ class Backgammon:
             self.dice.rollNoDoubles()
             moves = generateMoves2(self.board, self.colors[0], self.dice, verbose=True)
             print("Black rolled: " + str(self.dice))
-            move = random.choice(list(moves))
+            move = random.choice(tuple(moves))
             self.board.applyBoard(move.getBoardAfter())
             print(self.board)
             # self.getMove(self.colors[0])
@@ -61,7 +61,7 @@ class Backgammon:
         moves = generateMoves2(self.board, self.colors[0], self.dice)
         if verbose:
             print(str(len(moves)) + " moves: " + str(moves))
-        move = random.choice(list(moves))
+        move = random.choice(tuple(moves))
         self.board.applyBoard(move.getBoardAfter())
         if verbose:
             print(self.board)
@@ -83,7 +83,7 @@ class Backgammon:
         moves = generateMoves2(self.board, self.colors[1], self.dice)
         if verbose:
             print(str(len(moves)) + " moves: " + str(moves))
-        move = random.choice(list(moves))
+        move = random.choice(tuple(moves))
         self.board.applyBoard(move.getBoardAfter())
         if verbose:
             print(self.board)
