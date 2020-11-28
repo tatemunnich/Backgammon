@@ -2,7 +2,7 @@ import unittest
 
 from board.Board import Board
 from board.Dice import Dice
-from move.MovementFactory import generateMoves2
+from move.MovementFactory import generate_moves
 
 
 class MyTestCase(unittest.TestCase):
@@ -10,7 +10,7 @@ class MyTestCase(unittest.TestCase):
     def test_0(self):
         b = Board()
         d = Dice(5, 1)
-        m = generateMoves2(b, "BLACK", d)
+        m = generate_moves(b, "BLACK", d)
 
         print(b)
         print(m)
@@ -33,7 +33,7 @@ class MyTestCase(unittest.TestCase):
         b.whiteCheckersTaken = 0
 
         d = Dice(5, 1)
-        m = generateMoves2(b, "WHITE", d)
+        m = generate_moves(b, "WHITE", d)
 
         self.assertEqual(len(m), 1)
         # self.assertEqual(m, {"7/2"})
@@ -54,7 +54,7 @@ class MyTestCase(unittest.TestCase):
         b.whiteCheckersTaken = 0
 
         d = Dice(1, 2)
-        m = generateMoves2(b, "WHITE", d)
+        m = generate_moves(b, "WHITE", d)
         print(b)
         print(m)
 
@@ -76,7 +76,7 @@ class MyTestCase(unittest.TestCase):
         b.whiteCheckersTaken = 0
 
         d = Dice(1, 2)
-        m = generateMoves2(b, "WHITE", d)
+        m = generate_moves(b, "WHITE", d)
         print(b)
         print(m)
 
@@ -105,7 +105,7 @@ class MyTestCase(unittest.TestCase):
         b.whiteCheckersTaken = 0
 
         d = Dice(4, 2)
-        m = generateMoves2(b, "BLACK", d)
+        m = generate_moves(b, "BLACK", d)
         print(b)
         print(m)
 
@@ -129,7 +129,7 @@ class MyTestCase(unittest.TestCase):
         b.whiteCheckersTaken = 0
 
         d = Dice(4, 6)
-        m = generateMoves2(b, "BLACK", d)
+        m = generate_moves(b, "BLACK", d)
         print(b)
         print(m)
 
@@ -153,7 +153,7 @@ class MyTestCase(unittest.TestCase):
         b.whiteCheckersTaken = 0
 
         d = Dice(4, 2)
-        m = generateMoves2(b, "WHITE", d)
+        m = generate_moves(b, "WHITE", d)
         print(b)
         print(m)
 
@@ -177,7 +177,7 @@ class MyTestCase(unittest.TestCase):
         b.whiteCheckersTaken = 0
 
         d = Dice(2, 2)
-        m = generateMoves2(b, "WHITE", d)
+        m = generate_moves(b, "WHITE", d)
         print(b)
         print(m)
 
@@ -201,12 +201,12 @@ class MyTestCase(unittest.TestCase):
         b.whiteCheckersTaken = 0
 
         d = Dice(2, 2)
-        m = generateMoves2(b, "WHITE", d)
+        m = generate_moves(b, "WHITE", d)
         print(b)
         print(m)
 
-        self.assertEqual(len(m), 2)
-        # self.assertEqual(m, {"4/2 3/1 3/1 2/off", "4/2 3/1 3/1 3/1"})
+        self.assertEqual(len(m), 4)
+        # self.assertEqual(m, {"8/6 6/4 3/1 3/1", "8/6 6/4 4/2 2/off", "8/6 3/1 3/1 3/1", "8/6 6/4 4/2 3/1"})
 
 
 if __name__ == '__main__':
