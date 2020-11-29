@@ -21,7 +21,7 @@ class Backgammon:
             moves = generate_moves(self.board, self.colors[0], self.dice, verbose=True)
             print("Black rolled: " + str(self.dice))
             move = random.choice(tuple(moves))
-            self.board.applyBoard(move.getBoardAfter())
+            self.board.applyBoard(move.board_after)
             print(self.board)
             # self.getMove(self.colors[0])
             if self.board.getWinner() != NONE:
@@ -33,7 +33,7 @@ class Backgammon:
             print("White rolled: " + str(self.dice))
             moves = generate_moves(self.board, self.colors[1], self.dice)
             move = getMove(self.colors[1], moves)
-            self.board.applyBoard(move.getBoardAfter())
+            self.board.applyBoard(move.board_after)
             print(self.board)
             time.sleep(2)
 
@@ -62,7 +62,7 @@ class Backgammon:
         if verbose:
             print(str(len(moves)) + " moves: " + str(moves))
         move = random.choice(tuple(moves))
-        self.board.applyBoard(move.getBoardAfter())
+        self.board.applyBoard(move.board_after)
         if verbose:
             print(self.board)
             print("Black moved: " + str(move))
@@ -84,7 +84,7 @@ class Backgammon:
         if verbose:
             print(str(len(moves)) + " moves: " + str(moves))
         move = random.choice(tuple(moves))
-        self.board.applyBoard(move.getBoardAfter())
+        self.board.applyBoard(move.board_after)
         if verbose:
             print(self.board)
             print("White moved: " + str(move))
@@ -100,7 +100,7 @@ class Backgammon:
 
 
 def runRandomTime():
-    for i in range(20):
+    for i in range(100):
         b = Backgammon()
         b.runRandom(verbose=False)
 

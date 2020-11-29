@@ -57,9 +57,8 @@ def get_next_location_move_on(point_list, starting_loc, color):
 def do_normal_move(color, distance_dict, starting_loc, root, board, die_1, die_2):
     direction = getDirection(color)
     try:
-        scratch = board.__deepcopy__()
-        move = NormalMovement(color, die_1, starting_loc, starting_loc + die_1 * direction)
-        move.apply(scratch)
+        move = NormalMovement(color, starting_loc, starting_loc + die_1 * direction)
+        scratch = move.apply(board)
         # apply die 1
         move_node = MoveNode(root.name + " " + str(move), scratch, die=die_1, deep=root.deep + 1)
         root.children.append(move_node)
@@ -71,9 +70,8 @@ def do_normal_move(color, distance_dict, starting_loc, root, board, die_1, die_2
 
     if die_1 != die_2:
         try:
-            scratch = board.__deepcopy__()
-            move = NormalMovement(color, die_2, starting_loc, starting_loc + die_2 * direction)
-            move.apply(scratch)
+            move = NormalMovement(color, starting_loc, starting_loc + die_2 * direction)
+            scratch = move.apply(board)
             # apply die 2
             move_node = MoveNode(root.name + " " + str(move), scratch, die=die_2, deep=root.deep + 1)
             root.children.append(move_node)
@@ -106,9 +104,8 @@ def get_moves(color, distance_dict, starting_loc, root):
     # Pieces on bar
     if board.numBar(color) > 0:
         try:
-            scratch = board.__deepcopy__()
-            move = BarMovement(color, die_1, getRelativePointLocation(getOtherColor(color), die_1))
-            move.apply(scratch)
+            move = BarMovement(color, getRelativePointLocation(getOtherColor(color), die_1))
+            scratch = move.apply(board)
             # apply die 1
             move_node = MoveNode(root.name + " " + str(move), scratch, die=die_1, deep=root.deep+1)
             root.children.append(move_node)
@@ -118,9 +115,8 @@ def get_moves(color, distance_dict, starting_loc, root):
             if die_1 != die_2:
                 try:
                     # apply die 2 if different
-                    scratch = board.__deepcopy__()
-                    move = BarMovement(color, die_2, getRelativePointLocation(getOtherColor(color), die_2))
-                    move.apply(scratch)
+                    move = BarMovement(color, getRelativePointLocation(getOtherColor(color), die_2))
+                    scratch = move.apply(board)
                     # apply die 2
                     move_node = MoveNode(root.name + " " + str(move), scratch, die=die_2, deep=root.deep+1)
                     root.children.append(move_node)
@@ -133,10 +129,9 @@ def get_moves(color, distance_dict, starting_loc, root):
     elif board.allInHome(color):
         farthest_back = board.farthestBack(color)
         if die_1 >= getRelativePointLocation(color, farthest_back):
-            scratch = board.__deepcopy__()
             try:
                 move = TakeOffMovement(color, die_1, farthest_back)
-                move.apply(scratch)
+                scratch = move.apply(board)
                 move_node = MoveNode(root.name + " " + str(move), scratch, die=die_1, deep=root.deep+1)
                 root.children.append(move_node)
                 distance_dict = update_distance_dict(die_1, distance_dict)
@@ -147,9 +142,8 @@ def get_moves(color, distance_dict, starting_loc, root):
 
         else:
             try:
-                scratch = board.__deepcopy__()
                 move = TakeOffMovement(color, die_1, starting_loc)
-                move.apply(scratch)
+                scratch = move.apply(board)
                 move_node = MoveNode(root.name + " " + str(move), scratch, die=die_1, deep=root.deep+1)
                 root.children.append(move_node)
                 distance_dict = update_distance_dict(die_1, distance_dict)

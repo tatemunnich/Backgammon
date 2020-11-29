@@ -28,30 +28,30 @@ def createFromString(text: str, color: str, move_list):
 
 class NormalMovement:
 
-    def __init__(self, color: str, die: int, start: int, end: int):
+    def __init__(self, color: str, start: int, end: int):
         self.color = color
-        self.die = die
         self.start = start
         self.end = end
         self.hit = False
         if (not (1 <= self.start <= 24)) or (not (1 <= self.end <= 24)):
             raise IllegalMoveException("Invalid location")
 
-    def getDieUsed(self):
-        return self.die
-
     def apply(self, board: Board):
         if board.numAt(getOtherColor(self.color), self.end) > 1:
             raise IllegalMoveException("Other player occupies point " + str(self.end))
 
+        scratch = board.__deepcopy__()
+
         # VALID MOVEMENT, check if hit
-        if board.numAt(getOtherColor(self.color), self.end) == 1:
-            board.removeFromLocation(getOtherColor(self.color), self.end)
-            board.moveToBar(getOtherColor(self.color))
+        if scratch.numAt(getOtherColor(self.color), self.end) == 1:
+            scratch.removeFromLocation(getOtherColor(self.color), self.end)
+            scratch.moveToBar(getOtherColor(self.color))
             self.hit = True
 
-        board.removeFromLocation(self.color, self.start)
-        board.moveToLocation(self.color, self.end)
+        scratch.removeFromLocation(self.color, self.start)
+        scratch.moveToLocation(self.color, self.end)
+
+        return scratch
 
     def __str__(self):
         res = str(self.start) + "/" + str(self.end)
@@ -69,29 +69,29 @@ class NormalMovement:
 
 class BarMovement:
 
-    def __init__(self, color: str, die: int, end: int):
+    def __init__(self, color: str, end: int):
         self.color = color
-        self.die = die
         self.end = end
         self.hit = False
         if not (1 <= self.end <= 24):
             raise IllegalMoveException("Invalid location")
 
-    def getDieUsed(self):
-        return self.die
-
     def apply(self, board: Board):
         if board.numAt(getOtherColor(self.color), self.end) > 1:
             raise IllegalMoveException("Other player occupies the location " + str(self.end))
 
+        scratch = board.__deepcopy__()
+
         # VALID MOVEMENT, check if hit
-        if board.numAt(getOtherColor(self.color), self.end) == 1:
-            board.removeFromLocation(getOtherColor(self.color), self.end)
-            board.moveToBar(getOtherColor(self.color))
+        if scratch.numAt(getOtherColor(self.color), self.end) == 1:
+            scratch.removeFromLocation(getOtherColor(self.color), self.end)
+            scratch.moveToBar(getOtherColor(self.color))
             self.hit = True
 
-        board.moveFromBar(self.color)
-        board.moveToLocation(self.color, self.end)
+        scratch.moveFromBar(self.color)
+        scratch.moveToLocation(self.color, self.end)
+
+        return scratch
 
     def __str__(self):
         res = "bar/" + str(self.end)
@@ -127,9 +127,13 @@ class TakeOffMovement:
                 raise IllegalMoveException(
                     "You must move the farthest back piece off that you can with die " + str(self.die))
 
+        scratch = board.__deepcopy__()
+
         # VALID MOVEMENT
-        board.removeFromLocation(self.color, self.start)
-        board.moveOff(self.color)
+        scratch.removeFromLocation(self.color, self.start)
+        scratch.moveOff(self.color)
+
+        return scratch
 
     def __str__(self):
         return str(self.start) + "/off"
@@ -147,14 +151,8 @@ class MoveNode:
         self.children = []
         self.name = name
         self.board_after = board_after
-        self.die = die
         self.deep = deep
-
-    def setBoardAfter(self, board_after):
-        self.board_after = board_after
-
-    def getBoardAfter(self):
-        return self.board_after
+        self.die = die
 
     def __str__(self):
         return self.name
