@@ -1,5 +1,3 @@
-from anytree import Node
-
 from move.IllegalMoveException import IllegalMoveException
 from board.Board import getOtherColor, getRelativePointLocation, Board
 from itertools import permutations
@@ -50,7 +48,6 @@ class NormalMovement:
 
         scratch.removeFromLocation(self.color, self.start)
         scratch.moveToLocation(self.color, self.end)
-        scratch.turn = getOtherColor(self.color)
 
         return scratch
 
@@ -91,7 +88,6 @@ class BarMovement:
 
         scratch.moveFromBar(self.color)
         scratch.moveToLocation(self.color, self.end)
-        scratch.turn = getOtherColor(self.color)
 
         return scratch
 
@@ -134,7 +130,6 @@ class TakeOffMovement:
         # VALID MOVEMENT
         scratch.removeFromLocation(self.color, self.start)
         scratch.moveOff(self.color)
-        scratch.turn = getOtherColor(self.color)
 
         return scratch
 

@@ -63,8 +63,6 @@ class Board:
         self.doubleCube = doubleCube
         self.doublePossession = doublePossession
 
-        self.turn = BLACK  # start game with black to go first
-
     def __deepcopy__(self, memo={}):
         _copy = type(self)(copy(self.pointsContent), copy(self.blackCheckers),
                            copy(self.whiteCheckers), self.blackCheckersTaken, self.whiteCheckersTaken,
