@@ -63,6 +63,8 @@ class Board:
         self.doubleCube = doubleCube
         self.doublePossession = doublePossession
 
+        self.turn = BLACK  # start game with black to go first
+
     def __deepcopy__(self, memo={}):
         _copy = type(self)(copy(self.pointsContent), copy(self.blackCheckers),
                            copy(self.whiteCheckers), self.blackCheckersTaken, self.whiteCheckersTaken,
@@ -110,7 +112,7 @@ class Board:
             return " "
 
     def __str__(self):
-        strg = "\n+13-14-15-16-17-18------19-20-21-22-23-24-+\n"
+        strg = "+13-14-15-16-17-18------19-20-21-22-23-24-+\n"
         for i in range(1, 6):
             strg += "|"
 

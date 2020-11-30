@@ -190,3 +190,38 @@ def generate_moves(board: Board, color: str, dice: Dice, verbose=False):
         print(moves)
 
     return moves
+
+
+def generate_boards(board: Board, color: str, dice: Dice, verbose=False):
+    root = MoveNode(color + " " + str(dice), board_after=board, deep=0)
+    get_moves(color, dice.getDistances(), board.farthestBack(color), root)
+
+    min_die = min(dice.getDice())
+    max_die = max(dice.getDice())
+    depth = 0
+    used_dict = {min_die: set(), max_die: set()}
+    moves_dict = {}
+    for move in PreOrderIter(root):
+        deep = move.deep
+        if deep > depth:
+            depth = deep
+
+        if deep not in moves_dict:
+            moves_dict[deep] = {move.board_after}
+        else:
+            moves_dict[deep].add(move.board_after)
+
+        if depth == 1:
+            used_dict[move.die].add(move.board_after)
+
+    if depth == 1 and used_dict[min_die] and used_dict[max_die]:
+        moves = used_dict[max_die]
+    else:
+        moves = moves_dict[depth]
+
+    if verbose:
+        print(board)
+        print(dice)
+        print(moves)
+
+    return moves
