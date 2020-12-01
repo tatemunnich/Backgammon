@@ -110,7 +110,7 @@ def get_moves(color, distance_dict, starting_loc, root):
             move_node = MoveNode(root.name + " " + str(move), scratch, die=die_1, deep=root.deep+1)
             root.children.append(move_node)
             distance_dict_1 = update_distance_dict(die_1, distance_dict)
-            get_moves(color, distance_dict_1, starting_loc, move_node)
+            get_moves(color, distance_dict_1, scratch.farthestBack(color), move_node)
         except IllegalMoveException:
             if die_1 != die_2:
                 try:
@@ -121,7 +121,7 @@ def get_moves(color, distance_dict, starting_loc, root):
                     move_node = MoveNode(root.name + " " + str(move), scratch, die=die_2, deep=root.deep+1)
                     root.children.append(move_node)
                     distance_dict_1 = update_distance_dict(die_2, distance_dict)
-                    get_moves(color, distance_dict_1, starting_loc, move_node)
+                    get_moves(color, distance_dict_1, scratch.farthestBack(color), move_node)
                 except IllegalMoveException:
                     pass
 

@@ -1,13 +1,10 @@
-import time
 import cProfile
 
-from board.Board import Board, BLACK, WHITE, NONE, getOtherColor
+from board.Board import Board, BLACK, WHITE, NONE
 from board.Dice import Dice
-from move.Move import getMove
-from move.MovementFactory import generate_moves
-import random
+from interfacing.SnowieText import export
 
-from players.Player import RandomPlayer, MinimaxPlayer
+from players.Player import RandomPlayer, MinimaxPlayer, HumanPlayer
 
 
 class Backgammon:
@@ -16,52 +13,30 @@ class Backgammon:
         self.players = [player1, player2]
         self.board = Board()
         self.dice = Dice()
-        self.color = BLACK  # starting player black
-
-    def playAgainstRandom(self):
-        while self.board.getWinner() == NONE:
-            self.dice.rollNoDoubles()
-            moves = generate_moves(self.board, self.colors[0], self.dice, verbose=True)
-            print("Black rolled: " + str(self.dice))
-            move = random.choice(tuple(moves))
-            self.board.applyBoard(move.board_after)
-            print(self.board)
-            # self.getMove(self.colors[0])
-            if self.board.getWinner() != NONE:
-                break
-
-            print("")
-            self.dice.rollNoDoubles()
-            print("Black moved " + str(move))
-            print("White rolled: " + str(self.dice))
-            moves = generate_moves(self.board, self.colors[1], self.dice)
-            move = getMove(self.colors[1], moves)
-            self.board.applyBoard(move.board_after)
-            print(self.board)
-            time.sleep(2)
-
-            if self.board.getWinner() != NONE:
-                break
-        print("Winner, " + self.board.getWinner() + "!")
+        self.on_roll = 0  # starting player 1
 
     def reset(self):
         self.board = Board()
-        self.color = BLACK
+        self.on_roll = 0
 
     def do_move(self, move):
         self.board.applyBoard(move.board_after)
         self.dice.roll()
-        self.color = getOtherColor(self.color)
+        self.on_roll = (self.on_roll + 1) % 2
 
     def run(self, verbose=False):
+        if verbose:
+            print(self.board)
+            print(str(self.players[self.on_roll]) + " goes first.")
         while True:
             if verbose:
                 print("")
-                print(str(self.players[0]) + " rolled: " + str(self.dice))
-            move = self.players[0].get_move(self)
+                print(str(self.players[self.on_roll]) + " rolled: " + str(self.dice))
+            move = self.players[self.on_roll].get_move(self)
             self.do_move(move)
             if verbose:
                 print(self.board)
+                print(export(self))
                 print(move)
             if self.board.getWinner() != NONE:
                 if verbose:
@@ -70,12 +45,13 @@ class Backgammon:
             ##################################################
             if verbose:
                 print("")
-                print(str(self.players[1]) + " rolled: " + str(self.dice))
-            move = self.players[1].get_move(self)
+                print(str(self.players[self.on_roll]) + " rolled: " + str(self.dice))
+            move = self.players[self.on_roll].get_move(self)
             self.do_move(move)
             self.board.applyBoard(move.board_after)
             if verbose:
                 print(self.board)
+                print(export(self))
                 print(move)
             if self.board.getWinner() != NONE:
                 if verbose:
@@ -90,9 +66,9 @@ def runRandomTime():
         b.reset()
 
 
-cProfile.run('runRandomTime()')
+# cProfile.run('runRandomTime()')
 
-# b = Backgammon(MinimaxPlayer(BLACK), RandomPlayer(WHITE))
-# for i in range(20):
-#     print(b.run(verbose=False))
-#     b.reset()
+if __name__ == "__main__":
+    b = Backgammon(RandomPlayer(WHITE), RandomPlayer(BLACK))
+    b.run(verbose=True)
+    b.reset()

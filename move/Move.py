@@ -1,27 +1,5 @@
 from move.IllegalMoveException import IllegalMoveException
 from board.Board import getOtherColor, getRelativePointLocation, Board
-from itertools import permutations
-
-
-def getMove(color, move_list):
-    move_list = list(move_list)
-    while True:
-        text = input("Enter the move for " + color + ": ")
-        move_index = createFromString(text, color, move_list)
-        if move_index:
-            return move_list[move_index]
-
-
-def createFromString(text: str, color: str, move_list):
-    input_list = text.split(" ")
-    perms = permutations(input_list)
-    str_move_list = [str(move).replace(color + " ", "") for move in move_list]
-    for move_list in perms:
-        move = " ".join(move_list)
-        if move in str_move_list:
-            return str_move_list.index(move)
-
-    return False
 
 
 class NormalMovement:

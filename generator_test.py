@@ -208,6 +208,33 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(len(m), 4)
         # self.assertEqual(m, {"8/6 6/4 3/1 3/1", "8/6 6/4 4/2 2/off", "8/6 3/1 3/1 3/1", "8/6 6/4 4/2 3/1"})
 
+    def test_9(self):
+        b = Board()
+        b.pointsContent = [0] * 26
+        b.pointsContent[1] = 2
+        b.pointsContent[6] = -5
+        b.pointsContent[7] = -3
+        b.pointsContent[8] = -4
+        b.pointsContent[12] = 4
+        b.pointsContent[13] = 1
+        b.pointsContent[18] = -2
+        b.pointsContent[19] = 3
+        b.pointsContent[21] = 2
+        b.pointsContent[23] = 2
+        b.pointsContent[24] = 1
+
+        b.blackCheckers = {1, 12, 13, 19, 21, 23, 24}
+        b.whiteCheckers = {6, 7, 8, 18}
+        b.blackCheckersTaken = 0
+        b.whiteCheckersTaken = 1
+
+        d = Dice(4, 1)
+        m = generate_moves(b, "WHITE", d)
+        print(b)
+        print(m)
+
+        self.assertEqual(len(m), 5)
+
 
 if __name__ == '__main__':
     unittest.main()
