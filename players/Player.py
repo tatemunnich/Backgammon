@@ -2,14 +2,15 @@ import random
 import re
 from itertools import permutations
 
-from board.Board import BLACK, NONE, getOtherColor
+from board.Board import BLACK, NONE, getOtherColor, getPieceSymbol, WHITE, getDirection, Board
 from board.Dice import Dice
 from move.Move import MoveNode
 from move.MovementFactory import generate_moves
 
 
 class MinimaxPlayer:
-    def __init__(self, color, ply=2):
+    def __init__(self, color, ply=2, name="Max"):
+        self.name = name
         self.color = color
         if ply > 2:
             raise Exception("don't do more than 2")
@@ -21,7 +22,7 @@ class MinimaxPlayer:
         return expectiminimax(current, self.ply, self.color, backgammon.dice)[1]
 
     def __str__(self):
-        return self.color
+        return self.name + " (" + getPieceSymbol(self.color) + ")"
 
 
 probability = {
@@ -93,7 +94,8 @@ def expectiminimax(move: MoveNode, ply, color, dice=None):
 
 
 class RandomPlayer:
-    def __init__(self, color):
+    def __init__(self, color, name="Crazy Carl"):
+        self.name = name
         self.color = color
 
     def get_move(self, backgammon):
@@ -101,13 +103,14 @@ class RandomPlayer:
         return random.choice(tuple(moves))
 
     def __str__(self):
-        return self.color
+        return self.name + " (" + getPieceSymbol(self.color) + ")"
 
 ##########################################################################################################
 
 
 class HumanPlayer:
-    def __init__(self, color):
+    def __init__(self, name, color):
+        self.name = name
         self.color = color
 
     def get_move(self, backgammon):
@@ -115,7 +118,7 @@ class HumanPlayer:
         return get_move(self.color, moves)
 
     def __str__(self):
-        return self.color
+        return self.name + " (" + getPieceSymbol(self.color) + ")"
 
 
 def get_move(color, move_list):
@@ -141,3 +144,103 @@ def create_from_string(text: str, color: str, move_list):
             return str_move_list.index(move)
 
     return False
+
+
+##########################################################################################################
+
+
+class GnuPlayer:
+    def __init__(self, color):
+        self.name = "gnubg"
+        if color != WHITE:
+            raise Exception("Gnubg should be white to avoid confusion")
+        self.color = color
+
+    def get_move(self, backgammon):
+        moves = generate_moves(backgammon.board, self.color, backgammon.dice)
+        return random.choice(tuple(moves))
+
+    def __str__(self):
+        return self.name + " (" + getPieceSymbol(self.color) + ")"
+
+
+def export_to_snowietxt(backgammon):
+    current_player = backgammon.players[backgammon.on_roll]
+    if type(current_player) != GnuPlayer:
+        return False
+    current_color = current_player.color
+    direction = getDirection(current_color)
+    other_player = backgammon.players[(backgammon.on_roll + 1) % 2]
+
+    string = ""
+
+    match_length = 0
+    string += str(match_length) + ";"
+
+    jacoby = 0
+    string += str(jacoby) + ";0;1;"
+
+    current_player = 0
+    string += str(current_player) + ";"
+
+    name = other_player.name
+    string += "gnubg;" + str(name) + ";"
+
+    crawford = 0
+    string += str(crawford) + ";"
+
+    score_0, score_1 = 0, 0
+    string += str(score_0) + ";" + str(score_1) + ";"
+
+    cube_value = backgammon.board.doubleCube
+    string += str(cube_value) + ";"
+
+    cube_possesion = -1  # don't give the computer the doubling cube
+    string += str(cube_possesion) + ";"
+
+    current_on_bar = backgammon.board.numBar(current_color)
+    string += str(current_on_bar) + ";"
+
+    points = reversed(backgammon.board.pointsContent[1:-1])
+    points = [-direction*point for point in points]
+    for point in points:
+        string += str(point) + ";"
+
+    other_on_bar = backgammon.board.numBar(getOtherColor(current_color))
+    string += str(other_on_bar) + ";"
+
+    die_1, die_2 = backgammon.dice.die1, backgammon.dice.die2
+    string += str(die_1) + ";" + str(die_2) + ";"
+
+    return string
+
+
+def import_from_snowietxt(string: str):
+    vals = string.split(";")
+    if vals[4] != "1" or vals[6] != "gnubg":
+        raise Exception("Invalid file")
+
+    b = Board()
+    b.doubleCube = int(vals[10])
+    b.doublePossession = NONE if vals[11] == "0" else BLACK if vals[11] == "1" else WHITE
+    b.blackCheckersTaken = int(vals[12])
+    b.whiteCheckersTaken = int(vals[37])
+    b.blackCheckers = set()
+    b.whiteCheckers = set()
+    black_count = 15 - b.blackCheckersTaken
+    white_count = -15 + b.whiteCheckersTaken
+    for point, v in enumerate(vals[13:37], 1):
+        v = int(v)
+        b.pointsContent[point] = v
+        if v < 0:
+            b.whiteCheckers.add(point)
+            white_count -= v
+        elif v > 0:
+            b.blackCheckers.add(point)
+            black_count -= v
+    b.pointsContent[0] = black_count
+    b.pointsContent[25] = white_count
+    print(b.pointsContent)
+    print(b)
+    print(b.blackCheckers)
+    print(b.whiteCheckers)

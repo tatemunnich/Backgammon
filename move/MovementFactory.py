@@ -112,45 +112,33 @@ def get_moves(color, distance_dict, starting_loc, root):
             distance_dict_1 = update_distance_dict(die_1, distance_dict)
             get_moves(color, distance_dict_1, scratch.farthestBack(color), move_node)
         except IllegalMoveException:
-            if die_1 != die_2:
-                try:
-                    # apply die 2 if different
-                    move = BarMovement(color, getRelativePointLocation(getOtherColor(color), die_2))
-                    scratch = move.apply(board)
-                    # apply die 2
-                    move_node = MoveNode(root.name + " " + str(move), scratch, die=die_2, deep=root.deep+1)
-                    root.children.append(move_node)
-                    distance_dict_1 = update_distance_dict(die_2, distance_dict)
-                    get_moves(color, distance_dict_1, scratch.farthestBack(color), move_node)
-                except IllegalMoveException:
-                    pass
-
-    # # Able to bear off
-    elif board.allInHome(color):
-        farthest_back = board.farthestBack(color)
-        if die_1 >= getRelativePointLocation(color, farthest_back):
+            pass
+        if die_1 != die_2:
             try:
-                move = TakeOffMovement(color, die_1, farthest_back)
+                # apply die 2 if different
+                move = BarMovement(color, getRelativePointLocation(getOtherColor(color), die_2))
                 scratch = move.apply(board)
-                move_node = MoveNode(root.name + " " + str(move), scratch, die=die_1, deep=root.deep+1)
+                # apply die 2
+                move_node = MoveNode(root.name + " " + str(move), scratch, die=die_2, deep=root.deep+1)
                 root.children.append(move_node)
-                distance_dict = update_distance_dict(die_1, distance_dict)
-                new_start = get_next_location(scratch.getCheckers(color), starting_loc, color)
-                get_moves(color, distance_dict, new_start, move_node)
+                distance_dict_1 = update_distance_dict(die_2, distance_dict)
+                get_moves(color, distance_dict_1, scratch.farthestBack(color), move_node)
             except IllegalMoveException:
                 pass
 
-        else:
-            try:
-                move = TakeOffMovement(color, die_1, starting_loc)
-                scratch = move.apply(board)
-                move_node = MoveNode(root.name + " " + str(move), scratch, die=die_1, deep=root.deep+1)
-                root.children.append(move_node)
-                distance_dict = update_distance_dict(die_1, distance_dict)
-                new_start = get_next_location(scratch.getCheckers(color), starting_loc, color)
-                get_moves(color, distance_dict, new_start, move_node)
-            except IllegalMoveException:
-                do_normal_move(color, distance_dict, starting_loc, root, board, die_1, die_2)
+    # # Able to bear off
+    elif board.allInHome(color):
+        try:
+            move = TakeOffMovement(color, die_1, starting_loc)
+            scratch = move.apply(board)
+            move_node = MoveNode(root.name + " " + str(move), scratch, die=die_1, deep=root.deep+1)
+            root.children.append(move_node)
+            distance_dict_1 = update_distance_dict(die_1, distance_dict)
+            new_start = get_next_location(scratch.getCheckers(color), starting_loc, color)
+            get_moves(color, distance_dict_1, new_start, move_node)
+        except IllegalMoveException:
+            pass
+        do_normal_move(color, distance_dict, starting_loc, root, board, die_1, die_2)
 
     # All other cases: only normal moves remain
     else:
@@ -178,41 +166,6 @@ def generate_moves(board: Board, color: str, dice: Dice, verbose=False):
 
         if depth == 1:
             used_dict[move.die].add(move)
-
-    if depth == 1 and used_dict[min_die] and used_dict[max_die]:
-        moves = used_dict[max_die]
-    else:
-        moves = moves_dict[depth]
-
-    if verbose:
-        print(board)
-        print(dice)
-        print(moves)
-
-    return moves
-
-
-def generate_boards(board: Board, color: str, dice: Dice, verbose=False):
-    root = MoveNode(color + " " + str(dice), board_after=board, deep=0)
-    get_moves(color, dice.getDistances(), board.farthestBack(color), root)
-
-    min_die = min(dice.getDice())
-    max_die = max(dice.getDice())
-    depth = 0
-    used_dict = {min_die: set(), max_die: set()}
-    moves_dict = {}
-    for move in PreOrderIter(root):
-        deep = move.deep
-        if deep > depth:
-            depth = deep
-
-        if deep not in moves_dict:
-            moves_dict[deep] = {move.board_after}
-        else:
-            moves_dict[deep].add(move.board_after)
-
-        if depth == 1:
-            used_dict[move.die].add(move.board_after)
 
     if depth == 1 and used_dict[min_die] and used_dict[max_die]:
         moves = used_dict[max_die]

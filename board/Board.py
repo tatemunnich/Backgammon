@@ -1,9 +1,16 @@
 from move.IllegalMoveException import IllegalMoveException
-from copy import deepcopy, copy
+from copy import copy
 
 BLACK = "BLACK"
 WHITE = "WHITE"
 NONE = "NONE"
+
+
+def getPieceSymbol(color):
+    if color == BLACK:
+        return "X"
+    elif color == WHITE:
+        return "O"
 
 
 def getOtherColor(color):
@@ -15,23 +22,23 @@ def getOtherColor(color):
 
 def getDirection(color):
     if color == BLACK:
-        return 1
-    elif color == WHITE:
         return -1
+    elif color == WHITE:
+        return 1
 
 
 def inHome(color, location):
     if color == BLACK:
-        return 18 < location < 25
-    elif color == WHITE:
         return 0 < location < 7
+    elif color == WHITE:
+        return 18 < location < 25
 
 
 def getRelativePointLocation(color, point):
     if color == BLACK:
-        return 25 - point
-    elif color == WHITE:
         return point
+    elif color == WHITE:
+        return 25 - point
 
 
 class Board:
@@ -39,19 +46,19 @@ class Board:
     def __init__(self, pointsContent=None, blackCheckers=None, whiteCheckers=None,
                  blackCheckersTaken=0, whiteCheckersTaken=0, doubleCube=1, doublePossession=NONE):
         if whiteCheckers is None:
-            whiteCheckers = {24, 13, 8, 6}
+            whiteCheckers = {1, 12, 17, 19}
         if blackCheckers is None:
-            blackCheckers = {1, 12, 17, 19}
+            blackCheckers = {24, 13, 8, 6}
         if pointsContent is None:
             pointsContent = [0] * 26
-            pointsContent[1] = 2
-            pointsContent[12] = 5
-            pointsContent[17] = 3
-            pointsContent[19] = 5
-            pointsContent[24] = -2
-            pointsContent[13] = -5
-            pointsContent[8] = -3
-            pointsContent[6] = -5
+            pointsContent[1] = -2
+            pointsContent[12] = -5
+            pointsContent[17] = -3
+            pointsContent[19] = -5
+            pointsContent[24] = 2
+            pointsContent[13] = 5
+            pointsContent[8] = 3
+            pointsContent[6] = 5
         self.pointsContent = pointsContent
 
         self.blackCheckers = blackCheckers
@@ -80,17 +87,17 @@ class Board:
 
     def reset(self):
         self.pointsContent = [0] * 26
-        self.pointsContent[1] = 2
-        self.pointsContent[12] = 5
-        self.pointsContent[17] = 3
-        self.pointsContent[19] = 5
-        self.pointsContent[24] = -2
-        self.pointsContent[13] = -5
-        self.pointsContent[8] = -3
-        self.pointsContent[6] = -5
+        self.pointsContent[1] = -2
+        self.pointsContent[12] = -5
+        self.pointsContent[17] = -3
+        self.pointsContent[19] = -5
+        self.pointsContent[24] = 2
+        self.pointsContent[13] = 5
+        self.pointsContent[8] = 3
+        self.pointsContent[6] = 5
 
-        self.blackCheckers = {1, 12, 17, 19}
-        self.whiteCheckers = {24, 13, 8, 6}
+        self.blackCheckers = {24, 13, 8, 6}
+        self.whiteCheckers = {1, 12, 17, 19}
 
         self.blackCheckersTaken = 0
         self.whiteCheckersTaken = 0
@@ -121,17 +128,56 @@ class Board:
 
             strg += "| "
 
-            bar_num = self.numBar(WHITE)
+            bar_num = self.numBar(BLACK)
             if i == 1 and bar_num > 6:
                 strg += str(bar_num)
             elif bar_num >= 6 - i:
-                strg += "O"
+                strg += "X"
             else:
                 strg += " "
 
             strg += " |"
 
             for j in range(19, 25):
+                strg += " "
+                strg += self._printPiece(j, i)
+                strg += " "
+
+            strg += "| "
+
+            off_num = self.numOff(WHITE)
+            if off_num >= i:
+                strg += "0"
+            if off_num >= 5 + i:
+                strg += "0"
+            if off_num >= 10 + i:
+                strg += "0"
+
+            strg += "\n"
+
+        strg += "|                  |BAR|                  |\n"
+
+        for i in range(5, 0, -1):
+            strg += "|"
+
+            for j in range(12, 6, -1):
+                strg += " "
+                strg += self._printPiece(j, i)
+                strg += " "
+
+            strg += "| "
+
+            bar_num = self.numBar(WHITE)
+            if i == 1 and bar_num > 6:
+                strg += str(bar_num)
+            elif bar_num >= 6 - i:
+                strg += "0"
+            else:
+                strg += " "
+
+            strg += " |"
+
+            for j in range(6, 0, -1):
                 strg += " "
                 strg += self._printPiece(j, i)
                 strg += " "
@@ -148,45 +194,6 @@ class Board:
 
             strg += "\n"
 
-        strg += "|                  |BAR|                  |\n"
-
-        for i in range(5, 0, -1):
-            strg += "|"
-
-            for j in range(12, 6, -1):
-                strg += " "
-                strg += self._printPiece(j, i)
-                strg += " "
-
-            strg += "| "
-
-            bar_num = self.numBar(BLACK)
-            if i == 1 and bar_num > 6:
-                strg += str(bar_num)
-            elif bar_num >= 6 - i:
-                strg += "X"
-            else:
-                strg += " "
-
-            strg += " |"
-
-            for j in range(6, 0, -1):
-                strg += " "
-                strg += self._printPiece(j, i)
-                strg += " "
-
-            strg += "| "
-
-            off_num = self.numOff(WHITE)
-            if off_num >= i:
-                strg += "O"
-            if off_num >= 5 + i:
-                strg += "O"
-            if off_num >= 10 + i:
-                strg += "O"
-
-            strg += "\n"
-
         strg += "+12-11-10--9--8--7-------6--5--4--3--2--1-+"
         return strg
 
@@ -199,9 +206,9 @@ class Board:
 
     def getCheckers(self, color):
         if color == BLACK:
-            return sorted(self.blackCheckers)
+            return sorted(self.blackCheckers, reverse=True)
         elif color == WHITE:
-            return sorted(self.whiteCheckers, reverse=True)
+            return sorted(self.whiteCheckers)
 
     def colorAt(self, location):
         if self.pointsContent[location] < 0:
@@ -228,9 +235,9 @@ class Board:
 
     def numOff(self, color):
         if color == BLACK:
-            return abs(self.pointsContent[25])
-        elif color == WHITE:
             return abs(self.pointsContent[0])
+        elif color == WHITE:
+            return abs(self.pointsContent[25])
 
     def numBar(self, color):
         if color == BLACK:
@@ -278,19 +285,19 @@ class Board:
 
     def moveOff(self, color):
         if color == BLACK:
-            self.pointsContent[25] += 1
+            self.pointsContent[0] += 1
         elif color == WHITE:
-            self.pointsContent[0] -= 1
+            self.pointsContent[25] -= 1
 
     def farthestBack(self, color):
         if color == BLACK:
             if self.blackCheckers:
-                return min(self.blackCheckers)
+                return max(self.blackCheckers)
             else:
                 return 25
         elif color == WHITE:
             if self.whiteCheckers:
-                return max(self.whiteCheckers)
+                return min(self.whiteCheckers)
             else:
                 return 0
 
@@ -300,9 +307,9 @@ class Board:
         return inHome(color, self.farthestBack(color))
 
     def getWinner(self):
-        if self.pointsContent[25] == 15:
+        if self.pointsContent[0] == 15:
             return BLACK
-        elif self.pointsContent[0] == -15:
+        elif self.pointsContent[25] == -15:
             return WHITE
         else:
             return NONE

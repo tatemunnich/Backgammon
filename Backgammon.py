@@ -2,9 +2,8 @@ import cProfile
 
 from board.Board import Board, BLACK, WHITE, NONE
 from board.Dice import Dice
-from interfacing.SnowieText import export
 
-from players.Player import RandomPlayer, MinimaxPlayer, HumanPlayer
+from players.Player import RandomPlayer, MinimaxPlayer, HumanPlayer, GnuPlayer, export_to_snowietxt
 
 
 class Backgammon:
@@ -31,12 +30,12 @@ class Backgammon:
         while True:
             if verbose:
                 print("")
-                print(str(self.players[self.on_roll]) + " rolled: " + str(self.dice))
+                print(str(self.players[self.on_roll]) + " rolled " + str(self.dice))
             move = self.players[self.on_roll].get_move(self)
             self.do_move(move)
             if verbose:
                 print(self.board)
-                print(export(self))
+                print(export_to_snowietxt(self))
                 print(move)
             if self.board.getWinner() != NONE:
                 if verbose:
@@ -45,13 +44,13 @@ class Backgammon:
             ##################################################
             if verbose:
                 print("")
-                print(str(self.players[self.on_roll]) + " rolled: " + str(self.dice))
+                print(str(self.players[self.on_roll]) + " rolled " + str(self.dice))
             move = self.players[self.on_roll].get_move(self)
             self.do_move(move)
             self.board.applyBoard(move.board_after)
             if verbose:
                 print(self.board)
-                print(export(self))
+                print(export_to_snowietxt(self))
                 print(move)
             if self.board.getWinner() != NONE:
                 if verbose:
@@ -61,14 +60,13 @@ class Backgammon:
 
 def runRandomTime():
     b = Backgammon(RandomPlayer(BLACK), RandomPlayer(WHITE))
-    for i in range(20):
+    for i in range(30):
         print(b.run(verbose=False))
         b.reset()
 
 
-# cProfile.run('runRandomTime()')
-
 if __name__ == "__main__":
-    b = Backgammon(RandomPlayer(WHITE), RandomPlayer(BLACK))
+    b = Backgammon(RandomPlayer(BLACK), GnuPlayer(WHITE))
     b.run(verbose=True)
     b.reset()
+    # cProfile.run('runRandomTime()')
