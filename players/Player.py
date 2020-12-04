@@ -1,6 +1,7 @@
 import random
 import re
 from itertools import permutations
+from subprocess import Popen
 
 from board.Board import BLACK, NONE, getOtherColor, getPieceSymbol, WHITE, getDirection, Board
 from board.Dice import Dice
@@ -19,7 +20,27 @@ class MinimaxPlayer:
     def get_move(self, backgammon):
         board = backgammon.board
         current = MoveNode("start", board_after=board, deep=0)
-        return expectiminimax(current, self.ply, self.color, backgammon.dice)[1]
+        ab = alpha_beta(current, 3, self.color, 0, 1, "MAX", dice=backgammon.dice)
+        mm = expectiminimax(current, 2, self.color, backgammon.dice)
+        print(str(ab[0]>=mm[0]) + str(ab[0]-mm[0]))
+        return mm[1]
+
+    def __str__(self):
+        return self.name + " (" + getPieceSymbol(self.color) + ")"
+
+
+class AlphaBeta:
+    def __init__(self, color, ply=3, name="Alpha"):
+        self.name = name
+        self.color = color
+        if ply > 3:
+            raise Exception("don't do more than 3")
+        self.ply = ply
+
+    def get_move(self, backgammon):
+        board = backgammon.board
+        current = MoveNode("start", board_after=board, deep=0)
+        return alpha_beta(current, 3, self.color, 0, 1, "MAX", dice=backgammon.dice)[1]
 
     def __str__(self):
         return self.name + " (" + getPieceSymbol(self.color) + ")"
@@ -41,9 +62,9 @@ def get_board_children(board, color, dice=None):
         for roll in probability:
             moves = generate_moves(board, color, Dice(roll[0], roll[1]))
             children[roll] = moves
+        return children
     else:
         return generate_moves(board, color, dice)
-    return children
 
 
 def h(board, color):
@@ -65,7 +86,7 @@ def expectiminimax(move: MoveNode, ply, color, dice=None):
         raise Exception("don't do more than 2")
 
     board = move.board_after
-    if board.getWinner() != NONE or ply == 0:
+    if ply == 0 or board.getWinner() != NONE:
         return h(board, color), move
 
     if dice:  # assume that it is color's move
@@ -89,6 +110,61 @@ def expectiminimax(move: MoveNode, ply, color, dice=None):
             alpha = alpha + roll_alpha * probability[roll]
 
     return alpha, return_move
+
+
+def alpha_beta(move, ply, color, alpha, beta, label, done=set(), dice=None):
+    if ply > 3:
+        raise Exception("don't do more than 3")
+
+    board = move.board_after
+    if ply == 0 or board.getWinner() != NONE:
+        return h(board, color), move
+
+    if label == "MAX":
+        value = 0
+        return_move = None
+        children = get_board_children(board, color, dice=dice)
+        for new_move in children:
+            new_value = alpha_beta(new_move, ply - 1, getOtherColor(color), alpha, beta, "CHANCE", done=done)[0]
+            if new_value > value:
+                return_move = new_move
+                value = new_value
+            alpha = max(alpha, value)
+            if alpha >= beta:
+                break
+        return value, return_move
+
+    elif label == "MIN":
+        value = 1
+        return_move = None
+        children = get_board_children(board, color, dice=dice)
+        for new_move in children:
+            if board not in done:
+                new_value = alpha_beta(new_move, ply - 1, getOtherColor(color), alpha, beta, "CHANCE", done=done)[0]
+                done.add(board)
+            else:
+                break
+            if new_value < value:
+                return_move = new_move
+                value = new_value
+            beta = min(beta, value)
+            if beta <= alpha:
+                break
+        return value, return_move
+
+    elif label == "CHANCE":
+        used_prob = 0
+        value = 0
+        for roll in probability:
+            value = value + probability[roll] * alpha_beta(move, ply - 1, color, alpha, beta,
+                                                           "MIN", done=done, dice=Dice(roll[0], roll[1]))[0]
+            used_prob += probability[roll]
+            max_value = 1 * (1 - used_prob) + value
+            beta = min(beta, max_value)
+            if beta <= alpha:
+                break
+
+    return value, "Dice node"
 
 #########################################################################################################
 
@@ -158,13 +234,23 @@ class GnuPlayer:
 
     def get_move(self, backgammon):
         moves = generate_moves(backgammon.board, self.color, backgammon.dice)
-        return random.choice(tuple(moves))
+        if len(moves) == 1:
+            return moves.pop()
+        export_to_snowietxt(backgammon,
+                            r"C:\users\tatem\onedrive\documents\my stuff\senior\ai\course-project-tate\interfacing\to_gnu.txt")
+        p = Popen([r"C:\Program Files (x86)\gnubg\gnubg-cli.exe", "-q", "-t", "-c",
+                   r"C:\users\tatem\onedrive\documents\my stuff\senior\ai\course-project-tate\interfacing\command.txt"])
+        outs, errs = p.communicate(timeout=10)
+        board = import_from_snowietxt(
+            r"C:\users\tatem\onedrive\documents\my stuff\senior\ai\course-project-tate\interfacing\from_gnu.txt")
+        move = MoveNode("GnuMove", board, deep=0)
+        return move
 
     def __str__(self):
         return self.name + " (" + getPieceSymbol(self.color) + ")"
 
 
-def export_to_snowietxt(backgammon):
+def export_to_snowietxt(backgammon, outfile):
     current_player = backgammon.players[backgammon.on_roll]
     if type(current_player) != GnuPlayer:
         return False
@@ -198,24 +284,28 @@ def export_to_snowietxt(backgammon):
     cube_possesion = -1  # don't give the computer the doubling cube
     string += str(cube_possesion) + ";"
 
-    current_on_bar = backgammon.board.numBar(current_color)
-    string += str(current_on_bar) + ";"
+    other_on_bar = backgammon.board.numBar(getOtherColor(current_color))
+    string += str(other_on_bar) + ";"
 
     points = reversed(backgammon.board.pointsContent[1:-1])
-    points = [-direction*point for point in points]
+    points = [-direction * point for point in points]
     for point in points:
         string += str(point) + ";"
 
-    other_on_bar = backgammon.board.numBar(getOtherColor(current_color))
-    string += str(other_on_bar) + ";"
+    current_on_bar = backgammon.board.numBar(current_color)
+    string += str(current_on_bar) + ";"
 
     die_1, die_2 = backgammon.dice.die1, backgammon.dice.die2
     string += str(die_1) + ";" + str(die_2) + ";"
 
-    return string
+    with open(outfile, "w") as f:
+        f.write(string)
 
 
-def import_from_snowietxt(string: str):
+def import_from_snowietxt(infile):
+    with open(infile) as f:
+        string = f.readline()
+
     vals = string.split(";")
     if vals[4] != "1" or vals[6] != "gnubg":
         raise Exception("Invalid file")
@@ -223,8 +313,8 @@ def import_from_snowietxt(string: str):
     b = Board()
     b.doubleCube = int(vals[10])
     b.doublePossession = NONE if vals[11] == "0" else BLACK if vals[11] == "1" else WHITE
-    b.blackCheckersTaken = int(vals[12])
-    b.whiteCheckersTaken = int(vals[37])
+    b.blackCheckersTaken = int(vals[37])
+    b.whiteCheckersTaken = int(vals[12])
     b.blackCheckers = set()
     b.whiteCheckers = set()
     black_count = 15 - b.blackCheckersTaken
@@ -240,7 +330,4 @@ def import_from_snowietxt(string: str):
             black_count -= v
     b.pointsContent[0] = black_count
     b.pointsContent[25] = white_count
-    print(b.pointsContent)
-    print(b)
-    print(b.blackCheckers)
-    print(b.whiteCheckers)
+    return b
