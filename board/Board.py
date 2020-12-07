@@ -291,15 +291,19 @@ class Board:
 
     def farthestBack(self, color):
         if color == BLACK:
-            if self.blackCheckers:
+            if self.blackCheckersTaken != 0:
+                return 25
+            elif self.blackCheckers:
                 return max(self.blackCheckers)
             else:
-                return 25
+                return 0
         elif color == WHITE:
-            if self.whiteCheckers:
+            if self.whiteCheckersTaken != 0:
+                return 0
+            elif self.whiteCheckers:
                 return min(self.whiteCheckers)
             else:
-                return 0
+                return 25
 
     def allInHome(self, color):
         if self.numBar(color) != 0:
@@ -342,3 +346,8 @@ class Board:
             pips += num_at * abs(home - point)
         pips += 25 * self.numBar(color)
         return pips
+
+    def is_race(self):
+        if self.blackCheckersTaken != 0 or self.whiteCheckersTaken != 0:
+            return False
+        return self.farthestBack(WHITE) > self.farthestBack(BLACK)

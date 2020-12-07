@@ -343,7 +343,7 @@ class TestMinimax(unittest.TestCase):
 
         print(b)
         current = MoveNode("start", board_after=b, deep=0)
-        ab = alpha_beta(current, 2, "BLACK", -10000, 10000, dice=d)
+        ab = alpha_beta(current, 2, "BLACK", dice=d)
         mm = expectiminimax(current, 2, "BLACK", dice=d)
         print(ab)
         print(mm)
