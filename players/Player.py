@@ -98,7 +98,7 @@ def expectiminimax(move: MoveNode, ply, color, heuristic=pips_heuristic, dice=No
         return_move = None
         children = get_board_children(board, color, dice=dice)
         for new_move in children:
-            new_alpha = expectiminimax(new_move, ply - 1, color, heuristic)[0]
+            new_alpha = expectiminimax(new_move, ply - 1, color, heuristic=heuristic)[0]
             if new_alpha > alpha:
                 return_move = new_move
                 alpha = new_alpha
@@ -110,66 +110,53 @@ def expectiminimax(move: MoveNode, ply, color, heuristic=pips_heuristic, dice=No
         for roll in roll_dict:
             roll_alpha = math.inf
             for new_move in roll_dict[roll]:
-                roll_alpha = min(roll_alpha, expectiminimax(new_move, ply - 1, color, heuristic)[0])
+                roll_alpha = min(roll_alpha, expectiminimax(new_move, ply - 1, color, heuristic=heuristic)[0])
             alpha = alpha + roll_alpha * probability[roll]
 
     return alpha, return_move
 
 
 # TODO: this is not working correctly
-def alpha_beta(move, ply, color, alpha, beta, label, done=set(), dice=None):
-    if ply > 3:
-        raise Exception("don't do more than 3")
+def alpha_beta(move: MoveNode, ply, color, alpha, beta, heuristic=pips_heuristic, dice=None):
+    if ply > 2:
+        raise Exception("don't do more than 2")
 
     board = move.board_after
     if ply == 0 or board.getWinner() != NONE:
-        return pips_heuristic(board, color), move
+        return heuristic(board, color), move
 
-    if label == "MAX":
-        value = 0
+    if dice:  # assume that it is color's move
+        value = -math.inf
         return_move = None
         children = get_board_children(board, color, dice=dice)
         for new_move in children:
-            new_value = alpha_beta(new_move, ply - 1, getOtherColor(color), alpha, beta, "CHANCE", done=done)[0]
+            new_value = alpha_beta(new_move, ply - 1, color, alpha, beta, heuristic=heuristic)[0]
             if new_value > value:
                 return_move = new_move
                 value = new_value
             alpha = max(alpha, value)
             if alpha >= beta:
+                print("beta cutoff")
                 break
-        return value, return_move
 
-    elif label == "MIN":
-        value = 1
-        return_move = None
-        children = get_board_children(board, color, dice=dice)
-        for new_move in children:
-            if board not in done:
-                new_value = alpha_beta(new_move, ply - 1, getOtherColor(color), alpha, beta, "CHANCE", done=done)[0]
-                done.add(board)
-            else:
-                break
-            if new_value < value:
-                return_move = new_move
-                value = new_value
-            beta = min(beta, value)
-            if beta <= alpha:
-                break
-        return value, return_move
-
-    elif label == "CHANCE":
-        used_prob = 0
+    else:  # assume that is not color's move
+        roll_dict = get_board_children(board, getOtherColor(color))
         value = 0
-        for roll in probability:
-            value = value + probability[roll] * alpha_beta(move, ply, color, alpha, beta,
-                                                           "MIN", done=done, dice=Dice(roll[0], roll[1]))[0]
+        used_prob = 0
+        return_move = None
+        for roll in roll_dict:
+            roll_value = math.inf
+            for new_move in roll_dict[roll]:
+                roll_value = min(roll_value, alpha_beta(new_move, ply - 1, color, alpha, beta, heuristic=heuristic)[0])
+            value = value + roll_value * probability[roll]
             used_prob += probability[roll]
-            max_value = 1 * (1 - used_prob) + value
-            beta = min(beta, max_value)
+            upper_bound_value = value + 1 * (1 - used_prob)
+            beta = min(beta, upper_bound_value)
             if beta <= alpha:
+                print("alpha cutoff")
                 break
 
-    return value, "Dice node"
+    return value, return_move
 
 #########################################################################################################
 
