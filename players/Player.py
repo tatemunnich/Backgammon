@@ -1,7 +1,8 @@
+import math
 import random
 import re
 from itertools import permutations
-from subprocess import Popen
+from subprocess import Popen, PIPE
 
 from board.Board import BLACK, NONE, getOtherColor, getPieceSymbol, WHITE, getDirection, Board
 from board.Dice import Dice
@@ -20,9 +21,9 @@ class MinimaxPlayer:
     def get_move(self, backgammon):
         board = backgammon.board
         current = MoveNode("start", board_after=board, deep=0)
-        ab = alpha_beta(current, 3, self.color, 0, 1, "MAX", dice=backgammon.dice)
-        mm = expectiminimax(current, 2, self.color, backgammon.dice)
-        print(str(ab[0]>=mm[0]) + str(ab[0]-mm[0]))
+        # ab = alpha_beta(current, 3, self.color, 0, 1, "MAX", dice=backgammon.dice)
+        mm = expectiminimax(current, 2, self.color, heuristic=pips_heuristic, dice=backgammon.dice)
+        # print(str(ab[0]>=mm[0]) + str(ab[0]-mm[0]))
         return mm[1]
 
     def __str__(self):
@@ -40,7 +41,7 @@ class AlphaBeta:
     def get_move(self, backgammon):
         board = backgammon.board
         current = MoveNode("start", board_after=board, deep=0)
-        return alpha_beta(current, 3, self.color, 0, 1, "MAX", dice=backgammon.dice)[1]
+        return alpha_beta(current, 2, self.color, 0, 1, "MAX", dice=backgammon.dice)[1]
 
     def __str__(self):
         return self.name + " (" + getPieceSymbol(self.color) + ")"
@@ -67,34 +68,37 @@ def get_board_children(board, color, dice=None):
         return generate_moves(board, color, dice)
 
 
-def h(board, color):
-    points = board.getCheckers(color)
-    home = 25 if color == BLACK else 0
-    pips = 0
-    for point in points:
-        num_at = board.pointsContent[point]
-        if num_at == 1:
-            pips += num_at * (home - point)  # maybe treat blots differently
-        else:
-            pips += num_at * (home - point)
-    pips += 25 * board.numBar(color)
+def pips_heuristic(board, color):
+    pips = board.pips(color)
     return (375 - pips) / 375
 
 
-def expectiminimax(move: MoveNode, ply, color, dice=None):
+def enemy_pips_heuristic(board, color):
+    pips = board.pips(getOtherColor(color))
+    return pips / 375
+
+
+def pip_ratio_heuristic(board, color):
+    # TODO: not bounded
+    if board.getWinner() == color:
+        return 1000000000
+    return board.pips(getOtherColor(color)) / board.pips(color)
+
+
+def expectiminimax(move: MoveNode, ply, color, heuristic=pips_heuristic, dice=None):
     if ply > 2:
         raise Exception("don't do more than 2")
 
     board = move.board_after
     if ply == 0 or board.getWinner() != NONE:
-        return h(board, color), move
+        return heuristic(board, color), move
 
     if dice:  # assume that it is color's move
-        alpha = 0
+        alpha = -math.inf
         return_move = None
         children = get_board_children(board, color, dice=dice)
         for new_move in children:
-            new_alpha = expectiminimax(new_move, ply - 1, color)[0]
+            new_alpha = expectiminimax(new_move, ply - 1, color, heuristic)[0]
             if new_alpha > alpha:
                 return_move = new_move
                 alpha = new_alpha
@@ -104,21 +108,22 @@ def expectiminimax(move: MoveNode, ply, color, dice=None):
         alpha = 0
         return_move = None
         for roll in roll_dict:
-            roll_alpha = 1
+            roll_alpha = math.inf
             for new_move in roll_dict[roll]:
-                roll_alpha = min(roll_alpha, expectiminimax(new_move, ply - 1, color)[0])
+                roll_alpha = min(roll_alpha, expectiminimax(new_move, ply - 1, color, heuristic)[0])
             alpha = alpha + roll_alpha * probability[roll]
 
     return alpha, return_move
 
 
+# TODO: this is not working correctly
 def alpha_beta(move, ply, color, alpha, beta, label, done=set(), dice=None):
     if ply > 3:
         raise Exception("don't do more than 3")
 
     board = move.board_after
     if ply == 0 or board.getWinner() != NONE:
-        return h(board, color), move
+        return pips_heuristic(board, color), move
 
     if label == "MAX":
         value = 0
@@ -156,7 +161,7 @@ def alpha_beta(move, ply, color, alpha, beta, label, done=set(), dice=None):
         used_prob = 0
         value = 0
         for roll in probability:
-            value = value + probability[roll] * alpha_beta(move, ply - 1, color, alpha, beta,
+            value = value + probability[roll] * alpha_beta(move, ply, color, alpha, beta,
                                                            "MIN", done=done, dice=Dice(roll[0], roll[1]))[0]
             used_prob += probability[roll]
             max_value = 1 * (1 - used_prob) + value
@@ -239,11 +244,20 @@ class GnuPlayer:
         export_to_snowietxt(backgammon,
                             r"C:\users\tatem\onedrive\documents\my stuff\senior\ai\course-project-tate\interfacing\to_gnu.txt")
         p = Popen([r"C:\Program Files (x86)\gnubg\gnubg-cli.exe", "-q", "-t", "-c",
-                   r"C:\users\tatem\onedrive\documents\my stuff\senior\ai\course-project-tate\interfacing\command.txt"])
+                   r"C:\users\tatem\onedrive\documents\my stuff\senior\ai\course-project-tate\interfacing\command.txt"],
+                  stdout=PIPE, stdin=PIPE)
         outs, errs = p.communicate(timeout=10)
-        board = import_from_snowietxt(
-            r"C:\users\tatem\onedrive\documents\my stuff\senior\ai\course-project-tate\interfacing\from_gnu.txt")
-        move = MoveNode("GnuMove", board, deep=0)
+        p.wait()
+        f = re.search(r"gnubg moves (.*)" + re.escape("."), outs.decode('ascii'))
+        if not f:
+            name = "couldn't find text of move, output below"
+            if "gnubg offers to resign" in outs.decode('ascii'):
+                board = backgammon.board
+        else:
+            name = f.group(1) + " from gnubg's point of view"
+            board = import_from_snowietxt(
+                r"C:\users\tatem\onedrive\documents\my stuff\senior\ai\course-project-tate\interfacing\from_gnu.txt")
+        move = MoveNode(name, board, deep=0)
         return move
 
     def __str__(self):
@@ -298,8 +312,14 @@ def export_to_snowietxt(backgammon, outfile):
     die_1, die_2 = backgammon.dice.die1, backgammon.dice.die2
     string += str(die_1) + ";" + str(die_2) + ";"
 
-    with open(outfile, "w") as f:
-        f.write(string)
+    while True:
+        try:
+            with open(outfile, "w") as f:
+                f.write(string)
+                break
+        except PermissionError:
+            print("encountered a permission error. attempting to write again")
+            continue
 
 
 def import_from_snowietxt(infile):

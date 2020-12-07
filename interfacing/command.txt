@@ -1,0 +1,4 @@
+import snowietxt "C:\users\tatem\onedrive\documents\my stuff\senior\ai\course-project-tate\interfacing\to_gnu.txt"
+play
+reject
+export position snowietxt "C:\users\tatem\onedrive\documents\my stuff\senior\ai\course-project-tate\interfacing\from_gnu.txt"

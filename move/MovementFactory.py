@@ -1,7 +1,7 @@
 from copy import copy
 from anytree import PreOrderIter
 
-from board.Board import getOtherColor, getRelativePointLocation, getDirection, Board
+from board.Board import getOtherColor, getRelativePointLocation, getDirection, Board, NONE
 from board.Dice import Dice
 from move.IllegalMoveException import IllegalMoveException
 from move.Move import BarMovement, TakeOffMovement, NormalMovement, MoveNode
@@ -93,10 +93,12 @@ def get_moves(color, distance_dict, starting_loc, root):
     if not distance_dict:
         return
 
-    if not starting_loc:
+    if starting_loc is False:
         return
 
     board = root.board_after
+    if board.getWinner() != NONE:
+        return
     die_1 = max(distance_dict)
     die_2 = min(distance_dict)
     #############################################

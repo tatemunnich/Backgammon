@@ -198,7 +198,7 @@ class Board:
         return strg
 
     def __hash__(self):
-        return hash(tuple(self.pointsContent))
+        return hash((tuple(self.pointsContent), self.doubleCube, self.doublePossession))
 
     def __eq__(self, other):
         double_stuff = self.doubleCube == other.doubleCube and self.doublePossession == other.doublePossession
@@ -306,10 +306,39 @@ class Board:
             return False
         return inHome(color, self.farthestBack(color))
 
-    def getWinner(self):
+    def getWinner(self, game_value=False):
         if self.pointsContent[0] == 15:
-            return BLACK
+            if game_value:
+                value = 1
+                if not self.allInHome(WHITE):
+                    value = 2
+                    if self.numBar(WHITE) > 0 or inHome(BLACK, self.farthestBack(WHITE)):
+                        value = 3
+                return BLACK, value
+            else:
+                return BLACK
         elif self.pointsContent[25] == -15:
-            return WHITE
+            if game_value:
+                value = 1
+                if not self.allInHome(BLACK):
+                    value = 2
+                    if self.numBar(BLACK) > 0 or inHome(WHITE, self.farthestBack(BLACK)):
+                        value = 3
+                return WHITE, value
+            else:
+                return WHITE
         else:
-            return NONE
+            if game_value:
+                return NONE, 1
+            else:
+                return NONE
+
+    def pips(self, color):
+        points = self.getCheckers(color)
+        home = 0 if color == BLACK else 25
+        pips = 0
+        for point in points:
+            num_at = self.numAt(color, point)
+            pips += num_at * abs(home - point)
+        pips += 25 * self.numBar(color)
+        return pips
