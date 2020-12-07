@@ -2,7 +2,9 @@ import unittest
 
 from board.Board import Board
 from board.Dice import Dice
+from move.Move import MoveNode
 from move.MovementFactory import generate_moves
+from players.MinimaxPlayer import alpha_beta, expectiminimax
 
 
 class MyTestCase(unittest.TestCase):
@@ -285,6 +287,66 @@ class MyTestCase(unittest.TestCase):
 
         self.assertEqual(len(m), 4)
         # self.assertEqual(m, {"bar/4 1/3", "bar/4 21/23", "bar/2 18/20", "bar/4 18/22"})
+
+    def test_12(self):
+        b = Board()
+        b.pointsContent = [0] * 26
+        b.pointsContent[2] = 5
+        b.pointsContent[3] = -1
+        b.pointsContent[4] = 1
+        b.pointsContent[5] = 1
+        b.pointsContent[6] = 3
+        b.pointsContent[13] = 1
+        b.pointsContent[16] = -2
+        b.pointsContent[18] = -2
+        b.pointsContent[19] = -3
+        b.pointsContent[20] = -2
+        b.pointsContent[21] = -2
+        b.pointsContent[22] = -2
+        b.pointsContent[23] = -1
+        b.pointsContent[24] = 3
+        b.whiteCheckers = {3, 16, 18, 19, 20, 21, 22, 23}
+        b.blackCheckers = {24, 13, 6, 5, 4, 2}
+        b.whiteCheckersTaken = 0
+        b.blackCheckersTaken = 1
+
+        d = Dice(4, 1)
+        m = generate_moves(b, "BLACK", d)
+        print(b)
+        print(m)
+
+        self.assertEqual(len(m), 3)
+
+
+class TestMinimax(unittest.TestCase):
+    def test_0(self):
+        b = Board()
+        b.pointsContent = [0] * 26
+        b.pointsContent[1] = -3
+        b.pointsContent[2] = 6
+        b.pointsContent[3] = 4
+        b.pointsContent[6] = 2
+        b.pointsContent[4] = 1
+        b.pointsContent[13] = -1
+        b.pointsContent[19] = -4
+        b.pointsContent[20] = 2
+        b.pointsContent[22] = -1
+        b.pointsContent[23] = -4
+        b.pointsContent[24] = -2
+
+        b.whiteCheckers = {1, 13, 19, 22, 23, 24}
+        b.blackCheckers = {2, 3, 4, 6, 20}
+        b.blackCheckersTaken = 0
+        b.whiteCheckersTaken = 0
+
+        d = Dice(4, 1)
+
+        print(b)
+        current = MoveNode("start", board_after=b, deep=0)
+        ab = alpha_beta(current, 2, "BLACK", -10000, 10000, dice=d)
+        mm = expectiminimax(current, 2, "BLACK", dice=d)
+        print(ab)
+        print(mm)
 
 
 if __name__ == '__main__':
