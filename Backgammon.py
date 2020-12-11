@@ -3,8 +3,11 @@ import random
 
 from board.Board import Board, BLACK, WHITE, NONE
 from board.Dice import Dice
-
-from players.Player import RandomPlayer, MinimaxPlayer, HumanPlayer, GnuPlayer, AlphaBeta
+from players.GnuPlayer import GnuPlayer
+from players.MinimaxPlayer import AlphaBetaPlayer, MinimaxPlayer
+from players.RandomPlayer import RandomPlayer
+from players.TatePlayer import TatePlayer
+from players.heuristics import PipRatio
 
 
 class Backgammon:
@@ -23,6 +26,9 @@ class Backgammon:
         self.board.applyBoard(move.board_after)
         self.dice.roll()
         self.on_roll = (self.on_roll + 1) % 2
+
+    def get_current_player(self):
+        return self.players[self.on_roll]
 
     def start_game(self, verbose=False):
         player1_roll, player2_roll = 0, 0
@@ -58,7 +64,6 @@ class Backgammon:
                 print(str(self.players[self.on_roll]) + " rolled " + str(self.dice))
             move = self.players[self.on_roll].get_move(self)
             self.do_move(move)
-            self.board.applyBoard(move.board_after)
             if verbose:
                 print(self.board)
                 print(move)
@@ -70,13 +75,16 @@ class Backgammon:
     @staticmethod
     def benchmark(player1, player2, num_games):
         scores = {BLACK: 0, WHITE: 0}
+        wins = {BLACK: 0, WHITE: 0}
         back = Backgammon(player1(BLACK), player2(WHITE))
         for i in range(num_games):
-            winner, value = back.run(verbose=True)
+            winner, value = back.run(verbose=False )
             print("Game", str(i+1) + ":", winner, "wins a", value, "game")
             scores[winner] += value
+            wins[winner] += 1
             back.reset()
         print(scores)
+        print(wins)
         return scores
 
 

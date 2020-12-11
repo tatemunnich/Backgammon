@@ -98,8 +98,15 @@ def export_to_snowietxt(backgammon, outfile):
 
 
 def import_from_snowietxt(infile):
-    with open(infile) as f:
-        string = f.readline()
+    # TODO: encountering permission denied which prevents move reading
+    while True:
+        try:
+            with open(infile) as f:
+                string = f.readline()
+                break
+        except PermissionError:
+            print("encountered a permission error. attempting to read again")
+            continue
 
     vals = string.split(";")
     if vals[4] != "1" or vals[6] != "gnubg":
