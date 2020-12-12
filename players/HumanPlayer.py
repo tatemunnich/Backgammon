@@ -3,9 +3,10 @@ from itertools import permutations
 
 from board.Board import getPieceSymbol
 from move.MovementFactory import generate_moves
+from players.Player import Player
 
 
-class HumanPlayer:
+class HumanPlayer(Player):
     def __init__(self, name, color):
         self.name = name
         self.color = color

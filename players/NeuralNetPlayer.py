@@ -1,47 +1,95 @@
 import json
-
-import numpy
 import tensorflow as tf
-
-from Backgammon import Backgammon
-from board.Board import getPieceSymbol, BLACK, Board, WHITE
+from board.Board import getPieceSymbol, BLACK, Board, WHITE, getOtherColor
 from move.MovementFactory import generate_moves
-from players.RandomPlayer import RandomPlayer
+from players.Player import Player
 
 
-class NeuralNetPlayer:
-    def __init__(self, color, network, name="Net"):
+class NeuralNetPlayer(Player):
+    def __init__(self, color, network, name="Net", learning=False):
         self.name = name
         self.network = network
         self.color = color
-        pass
+        self.learning = learning
 
-    def get_move(self, backgammon, return_value=False):
-        moves = generate_moves(backgammon.board, BLACK, backgammon.dice)
-        best, value = None, 0
-        for move in moves:
-            new_value = self.network.calculate
-            if new_value > value:
-                best = move
-                value = new_value
-        if return_value:
-            return best, value
-        else:
-            return best
+    # def get_move(self, backgammon, return_value=False):
+    #     moves = generate_moves(backgammon.board, BLACK, backgammon.dice)
+    #     best, value = None, 0
+    #     for move in moves:
+    #         new_value = self.network.calculate
+    #         if new_value > value:
+    #             best = move
+    #             value = new_value
+    #     if return_value:
+    #         return best, value
+    #     else:
+    #         return best
 
-    def get_move_pa4(self, backgammon, learning=False):
+    def get_move(self, backgammon):
+        # pa4 specs
+        to_move = self.color
+        next_player = getOtherColor(self.color)
+
         board = backgammon.board
-        moves = generate_moves(board, BLACK, backgammon.dice)
-        best, value = None, 0
+        moves = generate_moves(board, to_move, backgammon.dice)
+        best, value, output = None, -1000000, None
         for move in moves:
-            new_value = self.network.evaluate(move.board_after, BLACK)
+            new_value, new_output = self.evaluate(move.board_after, next_player, to_move)
+            # print(move, " with value", new_value)
             if new_value > value:
                 best = move
                 value = new_value
+                output = new_output
 
-        if learning:
-            pass
+        if self.learning:
+            self.evaluate(board, to_move, to_move)
+            self.network.backprop(output)
+
         return best
+
+    def lost(self, board, value):
+        if self.learning:
+            if self.network.num_outputs == 1:
+                if self.color == BLACK:
+                    expected = tf.constant([[0.]])
+                elif self.color == WHITE:
+                    expected = tf.constant([[1.]])
+            elif self.network.num_outputs == 4:
+                if self.color == BLACK:
+                    if value == 1:
+                        expected = tf.constant([[0., 0., 1., 0.]])
+                    else:
+                        expected = tf.constant([[0., 0., 0., 1.]])
+                elif self.color == WHITE:
+                    if value == 1:
+                        expected = tf.constant([[1., 0., 0., 0.]])
+                    else:
+                        expected = tf.constant([[0., 1., 0., 0.]])
+
+            self.evaluate(board, self.color, self.color)
+            self.network.backprop(expected)
+
+    def won(self, board, value):
+        if self.learning:
+            if self.network.num_outputs == 1:
+                if self.color == BLACK:
+                    expected = tf.constant([[1.]])
+                elif self.color == WHITE:
+                    expected = tf.constant([[0.]])
+            elif self.network.num_outputs == 4:
+                if self.color == WHITE:
+                    if value == 1:
+                        expected = tf.constant([[0., 0., 1., 0.]])
+                    else:
+                        expected = tf.constant([[0., 0., 0., 1.]])
+                elif self.color == BLACK:
+                    if value == 1:
+                        expected = tf.constant([[1., 0., 0., 0.]])
+                    else:
+                        expected = tf.constant([[0., 1., 0., 0.]])
+
+            self.evaluate(board, getOtherColor(self.color), self.color)
+            self.network.backprop(expected)
 
     def __str__(self):
         return self.name + " (" + getPieceSymbol(self.color) + ")"
@@ -83,20 +131,25 @@ class NeuralNetPlayer:
         middle = black + [board.numBar(BLACK) / 2] + current_color + [board.numBar(WHITE) / 2] + white
         return tf.constant([[board.numOff(BLACK) / 15] + middle + [board.numOff(WHITE) / 15]])
 
-    def get_value(self, board, color_to_move):
+    def evaluate(self, board, color_to_move, color):
         x = self.get_input_vector(board, color_to_move)
         outputs = self.network.calculate(x)
-        if outputs.shape == (1, 1):
-            if color_to_move == BLACK:
-                return outputs[0][0]
-            elif color_to_move == WHITE:
-                return 1 - outputs[0][0]
+        if self.network.num_outputs == 1:
+            if color == BLACK:
+                return outputs[0][0], outputs
+            elif color == WHITE:
+                return 1 - outputs[0][0], outputs
+        elif self.network.num_outputs == 4:  # black win, black gammon, white win, white gammon
+            if color == BLACK:
+                return outputs[0][0] + 2*outputs[0][1] - outputs[0][2] - 2*outputs[0][3], outputs
+            elif color == WHITE:
+                return -outputs[0][0] - 2*outputs[0][1] + outputs[0][2] + 2*outputs[0][3], outputs
         else:
             raise Exception("Could not evaluate output shape")
 
 
 class NeuralNet:
-    def __init__(self, num_inputs=198, num_hidden=50, num_outputs=1, hidden_weights=None, second_weights=None):
+    def __init__(self, num_inputs=198, num_hidden=40, num_outputs=1, hidden_weights=None, second_weights=None):
         self.inputs = None  # shape (1, num_inputs)
         self.hidden_weights = hidden_weights  # shape (num_inputs, num_hidden)
         self.hidden_outputs = None  # shape (1, num_hidden)
@@ -108,7 +161,7 @@ class NeuralNet:
         self.num_outputs = num_outputs
 
         self.randomize_weights()
-        self.checkpoint_dir = "./checkpoints/checkpoints_1"
+        self.checkpoint_dir = "./checkpoints/checkpoints_4"
         self.ckpt = self.make_checkpoint()
 
         self.ew = tf.Variable(tf.zeros(shape=(num_hidden, num_outputs)))  # shape (num_hidden, num_outputs)
@@ -134,7 +187,7 @@ class NeuralNet:
         self.ckpt.save(self.checkpoint_dir + "/ckpt")
 
     def save_to_text(self, filename):
-        with open('./checkpoints/' + filename, 'w') as f:
+        with open('./checkpoints/4 text/' + filename, 'w') as f:
             weights = {"hidden": self.hidden_weights.numpy().tolist(), "second": self.second_weights.numpy().tolist()}
             json.dump(weights, f)
 
@@ -152,13 +205,13 @@ class NeuralNet:
     def backprop(self, expected):
         # As specified in gettysburg PA4
         lambd = 0.7
-        alpha = 0.05
-        beta = 0.05
-        self.ew = lambd * self.ew + tf.tensordot(self.hidden_outputs, self.gradient(self.outputs), axes=[0, 0])
+        alpha = 0.1
+        beta = 0.1
+        self.ew = lambd * self.ew + tf.tensordot(self.hidden_outputs, NeuralNet.gradient(self.outputs), axes=[0, 0])
         self.ev = lambd * self.ev + \
                   tf.tensordot(self.inputs[0],
-                               tf.math.multiply(tf.tensordot(self.gradient(self.hidden_outputs),
-                                                             self.gradient(self.outputs), axes=[0, 0]),
+                               tf.math.multiply(tf.tensordot(NeuralNet.gradient(self.hidden_outputs),
+                                                             NeuralNet.gradient(self.outputs), axes=[0, 0]),
                                                 self.second_weights), axes=0)
 
         error = expected - self.outputs

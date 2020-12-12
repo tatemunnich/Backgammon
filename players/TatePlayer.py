@@ -1,9 +1,10 @@
 from board.Board import getPieceSymbol
 from players.MinimaxPlayer import MinimaxPlayer, AlphaBetaPlayer
+from players.Player import Player
 from players.heuristics import PipRatio, FarthestBack, NumOff
 
 
-class TatePlayer:
+class TatePlayer(Player):
     def __init__(self, color, name="Tate Jr."):
         self.name = name
         self.color = color

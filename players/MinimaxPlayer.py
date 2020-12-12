@@ -4,9 +4,10 @@ from board.Board import getPieceSymbol, getOtherColor, NONE
 from board.Dice import Dice
 from move.Move import MoveNode
 from move.MovementFactory import generate_moves
+from players.Player import Player
 
 
-class MinimaxPlayer:
+class MinimaxPlayer(Player):
     def __init__(self, color, heuristic, ply=2, name="Max"):
         self.name = name
         self.color = color
@@ -26,7 +27,7 @@ class MinimaxPlayer:
 
 #########################
 
-class AlphaBetaPlayer:
+class AlphaBetaPlayer(Player):
     def __init__(self, color, heuristic, ply=2, name="Alpha"):
         self.name = name
         self.color = color

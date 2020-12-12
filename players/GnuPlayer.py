@@ -3,9 +3,10 @@ from subprocess import Popen, PIPE
 from board.Board import BLACK, NONE, getOtherColor, getPieceSymbol, WHITE, getDirection, Board
 from move.Move import MoveNode
 from move.MovementFactory import generate_moves
+from players.Player import Player
 
 
-class GnuPlayer:
+class GnuPlayer(Player):
     def __init__(self, color):
         self.name = "gnubg"
         if color != WHITE:
