@@ -1,4 +1,5 @@
 import random
+import argparse
 
 from board.Board import Board, BLACK, WHITE, NONE
 from board.Dice import Dice
@@ -96,10 +97,9 @@ class Backgammon:
             winner, _ = backgammon.run()
             backgammon.reset()
             print("\rGame", i+start_trial, "finished", end="")
-            if i % 1000 == 0 and i != 0:
-                latest_net = p1.network if winner == BLACK else p2.network
-                latest_net.save()
-                latest_net.save_to_text(str(i+start_trial)+".txt")
+            if i % 1000 == 0:
+                p1.network.save()
+                p1.network.save_to_text(str(i+start_trial)+".txt")
                 p1.learning = False
                 print("After", i + start_trial, "rounds of training:")
                 Backgammon.benchmark(p1, TatePlayer(WHITE), 15)
@@ -131,7 +131,7 @@ def runRandomTime():
 if __name__ == "__main__":
     # cProfile.run('runRandomTime()')
     # # s = "0;1;0;1;1;Crazy Carl;gnubg;0;0;0;1;1;0;8;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;0;0;0;"
-    net = NeuralNet(num_outputs=4)
+    net = NeuralNet(checkpoint_dir="./checkpoints/checkpoints_1", num_outputs=1)
     net.load()
     print(net.hidden_weights)
-    Backgammon.train(net, 15000, start_trial=15000)
+    Backgammon.train(net, 9000, start_trial=21000)

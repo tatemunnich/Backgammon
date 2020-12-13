@@ -149,21 +149,27 @@ class NeuralNetPlayer(Player):
 
 
 class NeuralNet:
-    def __init__(self, num_inputs=198, num_hidden=40, num_outputs=1, hidden_weights=None, second_weights=None):
+    def __init__(self, checkpoint_dir, num_inputs=198, num_hidden=40, num_outputs=1,
+                 hidden_weights=False, second_weights=None, save_traces=False):
         self.inputs = None  # shape (1, num_inputs)
-        self.hidden_weights = hidden_weights  # shape (num_inputs, num_hidden)
         self.hidden_outputs = None  # shape (1, num_hidden)
-        self.second_weights = second_weights  # shape (num_hidden, num_outputs)
         self.outputs = None  # shape (1, num_outputs)
 
         self.num_inputs = num_inputs
         self.num_hidden = num_hidden
         self.num_outputs = num_outputs
 
-        self.randomize_weights()
-        self.checkpoint_dir = "./checkpoints/checkpoints_4"
+        if hidden_weights:
+            self.hidden_weights = tf.Variable(tf.identity(hidden_weights))  # shape (num_inputs, num_hidden)
+            self.second_weights = tf.Variable(tf.identity(second_weights))  # shape (num_hidden, num_outputs)
+            print('hi')
+        else:
+            self.randomize_weights()
+
+        self.checkpoint_dir = checkpoint_dir
         self.ckpt = self.make_checkpoint()
 
+        self.save_traces = save_traces
         self.ew = tf.Variable(tf.zeros(shape=(num_hidden, num_outputs)))  # shape (num_hidden, num_outputs)
         self.ev = tf.Variable(tf.zeros(shape=(num_inputs, num_hidden, num_outputs)))  # shape (num_inputs, num_hidden, num_outputs)
 
@@ -181,22 +187,47 @@ class NeuralNet:
         return self.outputs
 
     def make_checkpoint(self):
-        return tf.train.Checkpoint(hidden_weights=self.hidden_weights, second_weights=self.second_weights)
+        try:
+            if self.save_traces:
+                return tf.train.Checkpoint(hidden_weights=self.hidden_weights, second_weights=self.second_weights,
+                                           ew=self.ew, ev=self.ev)
+            else:
+                return tf.train.Checkpoint(hidden_weights=self.hidden_weights, second_weights=self.second_weights)
+        except AttributeError:  # for checkpoints without save traces attribute
+            return tf.train.Checkpoint(hidden_weights=self.hidden_weights, second_weights=self.second_weights)
 
     def save(self):
         self.ckpt.save(self.checkpoint_dir + "/ckpt")
 
     def save_to_text(self, filename):
-        with open('./checkpoints/4 text/' + filename, 'w') as f:
-            weights = {"hidden": self.hidden_weights.numpy().tolist(), "second": self.second_weights.numpy().tolist()}
+        with open('./checkpoints/' + str(self.num_outputs) + ' text_new/' + filename, 'w') as f:
+            weights = {"hidden": self.hidden_weights.numpy().tolist(), "second": self.second_weights.numpy().tolist(),
+                       "ew": self.ew.numpy().tolist(), "ev": self.ev.numpy().tolist()}
             json.dump(weights, f)
 
-    def load(self, num=None):
+    def load(self, num=None, text_path=False):
+        if text_path:
+            with open(text_path) as f:
+                o = json.load(f)
+
+            ohw = tf.Variable(o['hidden'])
+            osw = tf.Variable(o['second'])
+            oew = tf.Variable(o['ew'])
+            oev = tf.Variable(o['ev'])
+
+            self.second_weights = osw
+            self.hidden_weights = ohw
+            self.ew = oew
+            self.ev = oev
+            return
         if num is None:
             status = self.ckpt.restore(tf.train.latest_checkpoint(self.checkpoint_dir))
         else:
             status = self.ckpt.restore(self.checkpoint_dir + "/ckpt-" + str(num))
         status.assert_consumed()
+        self.inputs = None
+        self.hidden_outputs = None
+        self.outputs = None
 
     @staticmethod
     def gradient(unit):
