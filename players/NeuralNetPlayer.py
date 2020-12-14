@@ -200,7 +200,7 @@ class NeuralNet:
         self.ckpt.save(self.checkpoint_dir + "/ckpt")
 
     def save_to_text(self, filename):
-        with open('./checkpoints/' + str(self.num_outputs) + ' text_new/' + filename, 'w') as f:
+        with open('./checkpoints/4_from_start/' + filename, 'w') as f:
             weights = {"hidden": self.hidden_weights.numpy().tolist(), "second": self.second_weights.numpy().tolist(),
                        "ew": self.ew.numpy().tolist(), "ev": self.ev.numpy().tolist()}
             json.dump(weights, f)
@@ -235,9 +235,9 @@ class NeuralNet:
 
     def backprop(self, expected):
         # As specified in gettysburg PA4
-        lambd = 0.7
-        alpha = 0.1
-        beta = 0.1
+        lambd = 0.6
+        alpha = 1 / self.num_inputs
+        beta = 1 / self.num_hidden
         self.ew = lambd * self.ew + tf.tensordot(self.hidden_outputs, NeuralNet.gradient(self.outputs), axes=[0, 0])
         self.ev = lambd * self.ev + \
                   tf.tensordot(self.inputs[0],
@@ -252,4 +252,3 @@ class NeuralNet:
 
         hidden_weights_change = alpha * tf.tensordot(self.ev, error[0], axes=1)
         self.hidden_weights.assign_add(hidden_weights_change)
-

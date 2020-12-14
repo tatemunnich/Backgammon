@@ -10,7 +10,7 @@ class TatePlayer(Player):
         self.color = color
         self.main = MinimaxPlayer(self.color, name=self.name, heuristic=PipRatio, ply=2)
         self.race = AlphaBetaPlayer(self.color, name=self.name, heuristic=FarthestBack, ply=1)
-        self.off = AlphaBetaPlayer(self.color, name=self.name, heuristic=NumOff, ply=2)
+        self.off = AlphaBetaPlayer(self.color, name=self.name, heuristic=NumOff, ply=1)
 
     def get_move(self, backgammon):
         if not backgammon.board.is_race():

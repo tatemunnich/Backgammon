@@ -13,6 +13,10 @@ class HumanPlayer(Player):
 
     def get_move(self, backgammon):
         moves = generate_moves(backgammon.board, self.color, backgammon.dice)
+        if len(moves) == 1:
+            move = moves.pop()
+            print("You had only one move, so we chose it for you")
+            return move
         return get_move(self.color, moves)
 
     def __str__(self):
@@ -32,7 +36,7 @@ def create_from_string(text: str, color: str, move_list):
     input_list = text.split(" ")
     perms = permutations(input_list)
     regex = re.compile(color + r" \d-\d: ")
-    str_move_list = [regex.sub("", str(move)) for move in move_list]
+    str_move_list = [regex.sub("", str(move)).replace("*", "") for move in move_list]
     if text in ["help", "-help", "-h", "list"]:
         print("These are the available moves: " + str(str_move_list))
         return False
@@ -40,5 +44,5 @@ def create_from_string(text: str, color: str, move_list):
         move = " ".join(move_list)
         if move in str_move_list:
             return str_move_list.index(move)
-
+    print("Invalid move. Type help to see list of valid moves")
     return False
